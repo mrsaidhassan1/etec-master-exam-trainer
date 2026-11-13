@@ -1189,7 +1189,7 @@ function renderShell(){
           return '<button class="nav-item'+(ROUTE===item.id?' active':'')+'" data-nav="'+item.id+'">'+icon(item.icon)+'<span>'+item.label+'</span></button>';
         }).join("") +
       '</nav>' +
-      '<div class="sidebar-foot">Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">Built by Said Hassan</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:mrsaidhassan1@gmail.com" style="color:inherit;text-decoration:underline;">mrsaidhassan1@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
+      '<div class="sidebar-foot">Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">Said Hassan — EFL Instructor at IATC Riyadh | © 2026 SH — All Rights Reserved | v3.0</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:mrsaidhassan1@gmail.com" style="color:inherit;text-decoration:underline;">mrsaidhassan1@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
     '</div>' +
     '<div class="main">' +
       '<div class="topbar">' +
@@ -1348,9 +1348,7 @@ function renderDashboard(){
           '<button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;" data-action="review-today" '+(rq.today.length===0?"disabled":"")+'>Start Review Today ('+rq.today.length+')</button>' +
         '</div>' +
       '</div>' +
-    '</div>' +
-
-    '<div class="disclaimer">This is an independent ETEC preparation resource based on recalled and practice materials. It is not an official ETEC examination platform. Questions 1–50 are consolidated from the supplied/remembered ETEC material; Questions 51–100 are scenario variations built only from concepts supported by those materials, and are labeled "Practice Variation" throughout the app.</div>'
+    '</div>'
   );
 }
 function statTile(label, value, sub, cls){
