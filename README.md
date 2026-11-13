@@ -2,16 +2,16 @@
 
 **Practice • Review • Master the ETEC Exam**
 
-A self-contained, single-file interactive web app for preparing for the ETEC trainer/instructor licence exam. Built from an expanded 228-question bank (multiple-choice questions, answer key, explanations, and high-priority revision notes) sourced from recalled and practice ETEC material, including the official ETEC study guide's Part 4 practice set.
+A self-contained, single-file interactive web app for preparing for the ETEC trainer/instructor licence exam. Built from an expanded 436-question bank (multiple-choice questions, answer key, explanations, and high-priority revision notes) sourced from recalled and practice ETEC material, including the official ETEC study guide's Part 4 practice set and new practice questions written against the ETEC Professional Standards for Trainers (2023).
 
 No build step, no backend, no dependencies to install — it's one HTML file. Progress is saved locally in the browser (`localStorage`), so nothing is lost on refresh.
 
 ## Features
 
 - **Dashboard** — coverage, accuracy, study streak, readiness rating (Low → Exam Ready), strongest/weakest topic, and a spaced-review queue
-- **Learn Mode** — study all 228 questions one at a time, in a shuffled order, with full explanations and topic/model callouts after each answer
+- **Learn Mode** — study all 436 questions one at a time, in a shuffled order, with full explanations and topic/model callouts after each answer
 - **Practice** — choose a question count (5/10/20/25/50/All) and filter by topic, with immediate feedback
-- **Main Exam** — a 75-question, 4-part timed mock exam mirroring the real ETEC exam structure (80 minutes total: Part 1 & 2 at 24 minutes each, Part 3 & 4 at 16 minutes each). Each part has its own countdown; once a part's time is up (or you finish it), it locks automatically and the exam moves straight to the next part — there is no going back to a closed part. Ends with a full topic-breakdown results screen
+- **Main Exams 1, 2 and 3** — three 75-question, 4-part timed mock exams (22 Knowledge / 21 Practices / 16 Values and Responsibilities / 16 Future Skills). Exam 3 covers topics the other two under-cover (Zoom, Canva, HTTPS, hand placement, non-verbal cues, CPD, LEAST-wording items). Each is a 75-question, 4-part timed mock exam mirroring the real ETEC exam structure (80 minutes total: Part 1 & 2 at 24 minutes each, Part 3 & 4 at 16 minutes each). Each part has its own countdown; once a part's time is up (or you finish it), it locks automatically and the exam moves straight to the next part — there is no going back to a closed part. Ends with a full topic-breakdown results screen
 - **Weak Areas** — per-category accuracy breakdown with a one-click "Practice Weak Areas" drill, plus a "Dangerous Zone" for questions answered incorrectly while very confident
 - **Revision** — concept cards and visual flows for Learning Theories, Assessment types, the Kirkpatrick pyramid, ADDIE, CIRO, Training Methods, Digital Learning, Technology, Statistics, and Trainer Management
 - **Flashcards** — flip-card deck covering the highest-priority concepts
