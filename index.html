@@ -131,7 +131,7 @@
   button{font-family:inherit;color:inherit;}
   .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
   a{color:inherit;}
-  ::selection{background:var(--navy-tint);}
+  ::selection{background:var(--navy-tint);color:var(--navy);}
   :focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-sm);}
 
   /* ===== App shell ===== */
@@ -253,12 +253,14 @@
     border-radius:10px;cursor:pointer;background:var(--surface);text-align:left;width:100%;
   }
   .option:hover:not(.locked){border-color:var(--navy);background:var(--navy-tint);}
+  .option:hover:not(.locked) .txt{color:var(--navy);}
   .option .letter{
     font-family:var(--font-mono);font-weight:600;font-size:12.5px;width:24px;height:24px;border-radius:6px;
     background:var(--surface-2);color:var(--ink-muted);display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:1px;
   }
   .option .txt{flex:1;font-size:14.5px;padding-top:1px;}
   .option.selected{border-color:var(--navy);background:var(--navy-tint);}
+  .option.selected .txt{color:var(--navy);}
   .option.selected .letter{background:var(--navy);color:#fff;}
   .option.correct{border-color:var(--good-border);background:var(--good-bg);}
   .option.correct .letter{background:var(--good);color:#fff;}
