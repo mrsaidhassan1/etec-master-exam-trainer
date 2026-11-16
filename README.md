@@ -4,7 +4,7 @@
 
 A self-contained, single-file interactive web app for preparing for the ETEC trainer/instructor licence exam. Built from an expanded 436-question bank (multiple-choice questions, answer key, explanations, and high-priority revision notes) sourced from recalled and practice ETEC material, including the official ETEC study guide's Part 4 practice set and new practice questions written against the ETEC Professional Standards for Trainers (2023).
 
-No build step, no backend, no dependencies to install — it's one HTML file. Progress is saved locally in the browser (`localStorage`), so nothing is lost on refresh.
+No build step, no required backend, no dependencies to install — it's one HTML file. Progress is saved locally in the browser (`localStorage`), so nothing is lost on refresh.
 
 ## Features
 
@@ -36,6 +36,10 @@ To host it (e.g. GitHub Pages, Netlify, or any static file host), upload the fil
 The question bank is consolidated from the supplied/remembered ETEC material, the official ETEC study guide's 120-question Part 4 practice set, and scenario variations built only from concepts supported by that material. Source and practice-variation questions are labeled accordingly in the data (`"sourceType": "Source Question"` vs. `"Practice Variation"`) so the two are never conflated. Every answer key entry was programmatically cross-checked against its own option text before being built into the app.
 
 This is an **independent ETEC preparation resource** based on recalled and practice materials. It is **not an official ETEC examination platform**, and it is not affiliated with or endorsed by ETEC.
+
+## Usage statistics (optional, off by default)
+
+The app can send anonymous usage statistics (sections used, topic-level right/wrong, mock scores, time spent) to a Google Sheet you own, so you can see how a group of trainees uses it. It sends nothing unless you configure an endpoint (see [`usage-collector/SETUP.md`](./usage-collector/SETUP.md)). When enabled, users see a consent banner on first launch and can turn it off from the sidebar. No names, emails, IP addresses, question text or chosen options are collected. The copy in this repository ships with no endpoint configured.
 
 ## Tech
 
