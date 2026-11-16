@@ -380,6 +380,24 @@
     .view{padding:18px 16px 50px;}
     .qcard{padding:18px 16px;}
   }
+
+  /* ---- Certificate ---- */
+  .cert-banner{margin-top:20px;padding:14px 18px;border-radius:12px;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;gap:14px;flex-wrap:wrap;text-align:left;}
+  .cert-banner .t{font-weight:700;color:var(--gold);font-size:14px;}
+  .cert-banner .s{font-size:12.5px;color:var(--ink-muted);}
+  .cert-check{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .cert-check:last-child{border-bottom:0;}
+  .cert-check .dot{width:20px;height:20px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--border);color:var(--ink-muted);}
+  .cert-check .dot.ok{background:var(--good);color:#fff;}
+  .cert-name-input{width:100%;max-width:420px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:8px;font-size:15px;background:var(--surface,#fff);color:var(--ink);font-family:inherit;}
+  #cert-wrap{max-width:900px;margin:18px auto 0;box-shadow:var(--shadow-md);border-radius:6px;overflow:hidden;background:#fff;}
+  #cert-wrap svg{display:block;width:100%;height:auto;}
+  @media print{
+    @page{size:landscape;margin:0;}
+    body *{visibility:hidden !important;}
+    #cert-wrap,#cert-wrap *{visibility:visible !important;}
+    #cert-wrap{position:fixed;left:0;top:0;width:100vw;max-width:none;margin:0;box-shadow:none;border-radius:0;}
+  }
 </style>
 </head>
 <body>
@@ -1273,7 +1291,9 @@ function defaultState(){
     lastSessionScore: null,
     bestMockScore: null,
     learnOrder: null,
-    learnIndex: 0
+    learnIndex: 0,
+    learnCompletedAt: null, // ISO date the Learn section was finished (needed for the certificate)
+    certificate: null       // {name, issuedAt, via} once the trainee has created a certificate
   };
 }
 
@@ -1439,6 +1459,7 @@ function recordAnswer(qid, selectedLetter, confidence){
   updateReviewBucket(qid, correct, confidence);
   touchStreak();
   saveState();
+  track("answer", { category: q.category, correct: correct, confidence: confidence || null, mode: (STUDY && ROUTE !== "mock") ? STUDY.mode : "mock" });
 }
 function wrongAttemptCount(qid){
   const a = STATE.answers[qid];
@@ -1469,6 +1490,140 @@ function logSession(type, correct, total){
   if(STATE.sessionHistory.length > 200) STATE.sessionHistory.shift();
   STATE.lastSessionScore = pct(correct,total);
   saveState();
+  if(type !== "mock") track("session_complete", { mode: type, pct: pct(correct,total), n: total });
+}
+
+// ================= Usage statistics (anonymous, opt-out) =================
+// Sends anonymous usage events to a Google Apps Script web app (see usage-collector/).
+// Collected: random browser ID, sections visited, answers' topic + right/wrong + confidence,
+// study/mock sessions, mock scores by domain, active time, device class.
+// NOT collected: names, emails, IP addresses, question text, which option was picked.
+const TELEMETRY = {
+  ENDPOINT: "https://script.google.com/macros/s/AKfycbzkPaJaewuJXMgOwxE_HVLDAWh6bJYKojWweIXe6fX0sUxRODo3bNDR2tUNc7vUXF80_g/exec",   // <- paste the deployed Apps Script web-app URL here (empty = collection disabled)
+  TOKEN: "mEcOFPqsdHLBUSBMehhGPc2W3s_ROORw44BUjyYReaM",      // <- same shared token as TOKEN in the Apps Script
+  VERSION: "v2-2026-11-16",
+  KEY: "etecMasterTrainer_usage_v1",
+  FLUSH_MS: 20000, MAX_QUEUE: 300, BATCH: 40
+};
+const T = (function(){
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem(TELEMETRY.KEY)); }catch(e){}
+  if(!s || typeof s !== "object") s = {};
+  if(!s.uid) s.uid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("u" + Date.now().toString(36) + Math.random().toString(36).slice(2,10));
+  if(!s.first) s.first = new Date().toISOString();
+  if(!Array.isArray(s.queue)) s.queue = [];
+  if(s.consent !== "yes" && s.consent !== "no") s.consent = null;
+  return s;
+})();
+const T_SID = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const T_OFF = /[?&]notrack\b/.test(location.search);   // add ?notrack to the URL to disable for that visit
+let T_FLUSHING = false, T_ACTIVE_MS = 0, T_LAST_VISIBLE = Date.now();
+
+function tSave(){ try{ localStorage.setItem(TELEMETRY.KEY, JSON.stringify(T)); }catch(e){} }
+function tEnabled(){ return !!TELEMETRY.ENDPOINT && !T_OFF && T.consent !== "no"; }
+function tDevice(){ const w = window.innerWidth || 1024; return w < 700 ? "mobile" : (w < 1100 ? "tablet" : "desktop"); }
+
+function track(event, data){
+  if(!tEnabled()) return;
+  try{
+    const ev = Object.assign({
+      eid: Date.now().toString(36) + Math.random().toString(36).slice(2,8),
+      ts: new Date().toISOString(), uid: T.uid, sid: T_SID, v: TELEMETRY.VERSION, event: event,
+      day: Math.floor((Date.now() - Date.parse(T.first)) / 86400000), device: tDevice(),
+      route: (typeof ROUTE !== "undefined") ? ROUTE : null
+    }, data || {});
+    T.queue.push(ev);
+    if(T.queue.length > TELEMETRY.MAX_QUEUE) T.queue.splice(0, T.queue.length - TELEMETRY.MAX_QUEUE);
+    tSave();
+    if(T.consent === "yes" && T.queue.length >= TELEMETRY.BATCH) tFlush();
+  }catch(e){}
+}
+
+function tFlush(){
+  if(!tEnabled() || T.consent !== "yes" || T_FLUSHING || !T.queue.length) return;
+  T_FLUSHING = true;
+  const batch = T.queue.slice(0, TELEMETRY.BATCH);
+  const body = JSON.stringify({ token: TELEMETRY.TOKEN, events: batch });
+  fetch(TELEMETRY.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: body })
+    .then(function(){
+      const sent = {}; batch.forEach(function(e){ sent[e.eid] = 1; });
+      T.queue = T.queue.filter(function(e){ return !sent[e.eid]; });
+      tSave(); T_FLUSHING = false;
+      if(T.queue.length) setTimeout(tFlush, 500);
+    })
+    .catch(function(){ T_FLUSHING = false; });   // offline: keep the queue, retry on next tick
+}
+
+function tActiveSec(){ return Math.round((T_ACTIVE_MS + (document.hidden ? 0 : Date.now() - T_LAST_VISIBLE)) / 1000); }
+
+function tSetConsent(v){
+  T.consent = v;
+  if(v === "no") T.queue = [];
+  tSave();
+  const b = document.getElementById("usage-banner"); if(b) b.remove();
+  if(v === "yes") tFlush();
+}
+
+function tShowBanner(){
+  if(document.getElementById("usage-banner")) return;
+  const d = document.createElement("div");
+  d.id = "usage-banner"; d.setAttribute("role","dialog"); d.setAttribute("aria-label","Anonymous usage statistics");
+  d.style.cssText = "position:fixed;left:16px;right:16px;bottom:16px;max-width:460px;z-index:9999;background:var(--surface);color:var(--ink);border:1px solid var(--border-strong);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:14px 16px;font-family:var(--font-body);font-size:13px;line-height:1.5;";
+  d.innerHTML =
+    '<div style="font-weight:600;margin-bottom:4px;">Help improve this trainer?</div>' +
+    '<div style="color:var(--ink-muted);margin-bottom:10px;">Anonymous usage statistics (sections used, topic scores, time spent) are sent to the author. No name, email or answer content is collected. You can change this any time from the sidebar.</div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+      '<button class="btn btn-ghost" id="usage-no">No thanks</button>' +
+      '<button class="btn btn-primary" id="usage-yes">Allow</button>' +
+    '</div>';
+  document.body.appendChild(d);
+  document.getElementById("usage-yes").addEventListener("click", function(){ tSetConsent("yes"); render(); });
+  document.getElementById("usage-no").addEventListener("click", function(){ tSetConsent("no"); render(); });
+}
+
+function telemetryFootHtml(){
+  if(!TELEMETRY.ENDPOINT || T_OFF) return "";
+  const label = T.consent === "yes" ? "On" : (T.consent === "no" ? "Off" : "Not set");
+  return '<div style="margin-bottom:8px;"><a href="#" data-action="usage-settings" style="color:inherit;text-decoration:underline;">Usage statistics: ' + label + '</a></div>';
+}
+
+function telemetryInit(){
+  if(!TELEMETRY.ENDPOINT || T_OFF) return;
+  document.addEventListener("click", function(e){
+    const a = e.target.closest && e.target.closest('[data-action="usage-settings"]');
+    if(!a) return;
+    e.preventDefault();
+    const on = T.consent === "yes";
+    openModal({
+      title: "Anonymous usage statistics",
+      body: "These are " + (on ? "currently <b>on</b>" : "currently <b>off</b>") + ". When on, this browser sends a random ID plus which sections you use, topic-level scores, mock exam results and time spent. No name, email or answer content is sent. Your study progress stays in this browser either way.",
+      confirmLabel: on ? "Turn off" : "Turn on",
+      danger: on,
+      onConfirm: function(){ tSetConsent(on ? "no" : "yes"); render(); toast(on ? "Usage statistics off." : "Usage statistics on. Thank you."); }
+    });
+  });
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden){
+      T_ACTIVE_MS += Date.now() - T_LAST_VISIBLE;
+      track("active", { sec: tActiveSec() });
+      tFlush();
+    } else { T_LAST_VISIBLE = Date.now(); }
+  });
+  window.addEventListener("pagehide", function(){ tFlush(); });
+  setInterval(tFlush, TELEMETRY.FLUSH_MS);
+  if(T.consent === null) tShowBanner();
+  const returning = !!(T.queue.length || localStorage.getItem(TELEMETRY.KEY + "_seen"));
+  try{ localStorage.setItem(TELEMETRY.KEY + "_seen", "1"); }catch(e){}
+  track("app_open", { returning: returning });
+  // One-time baseline of progress that already existed in this browser (counts only)
+  if(!T.baselineSent){
+    T.baselineSent = true; tSave();
+    const answered = Object.keys(STATE.answers).length;
+    if(answered || STATE.sessionHistory.length || STATE.mockAttempts.length){
+      track("baseline", { answered: answered, sessions: STATE.sessionHistory.length, mocks: STATE.mockAttempts.length,
+        bestMock: STATE.bestMockScore, bestStreak: STATE.streak.best, learnDone: !!STATE.learnCompletedAt, cert: !!STATE.certificate });
+    }
+  }
 }
 
 // ================= Nav / shell =================
@@ -1484,10 +1639,12 @@ const NAV_ITEMS = [
   { id: "saved", label: "Saved Questions", icon: "bookmark" },
   { id: "analytics", label: "Analytics", icon: "chart" },
   { id: "rapid", label: "10-Minute Review", icon: "bolt" },
-  { id: "traps", label: "Exam Traps", icon: "warn" }
+  { id: "traps", label: "Exam Traps", icon: "warn" },
+  { id: "certificate", label: "Certificate", icon: "award" }
 ];
 
 const ICONS = {
+  award: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>',
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H12v16h6.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>',
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>',
@@ -1510,6 +1667,7 @@ let ROUTE_PARAM = null;
 
 function navigate(route, param){
   ROUTE = route; ROUTE_PARAM = param || null;
+  track("view", { route: route });
   render();
   const main = document.querySelector(".main");
   if(main) main.scrollTop = 0;
@@ -1545,7 +1703,7 @@ function renderShell(){
           return '<button class="nav-item'+(ROUTE===item.id?' active':'')+'" data-nav="'+item.id+'">'+icon(item.icon)+'<span>'+item.label+'</span></button>';
         }).join("") +
       '</nav>' +
-      '<div class="sidebar-foot">Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">Said Hassan — EFL Instructor at IATC Riyadh | © 2026 SH — All Rights Reserved | v3.0</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:mrsaidhassan1@gmail.com" style="color:inherit;text-decoration:underline;">mrsaidhassan1@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
+      '<div class="sidebar-foot">' + telemetryFootHtml() + 'Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">Said Hassan — EFL Instructor at IATC Riyadh | © 2026 SH — All Rights Reserved | v3.0</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:mrsaidhassan1@gmail.com" style="color:inherit;text-decoration:underline;">mrsaidhassan1@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
     '</div>' +
     '<div class="main">' +
       '<div class="topbar">' +
@@ -1604,7 +1762,8 @@ function renderView(){
     saved: renderSaved,
     analytics: renderAnalytics,
     rapid: renderRapidReview,
-    traps: renderExamTraps
+    traps: renderExamTraps,
+    certificate: renderCertificate
   };
   const fn = renderers[ROUTE] || renderDashboard;
   el.innerHTML = fn();
@@ -1753,13 +1912,13 @@ function startLearnMode(){
   }
   STUDY = { mode:"learn", ids: STATE.learnOrder, index: STATE.learnIndex||0, title:"Learn Mode",
     correctCount:0, locked:false, selectedLetter:null, showConfidence:false, explainMore:false, freshKey:newFreshKey(), returnRoute:"learn" };
-  SUBVIEW = "study"; ROUTE = "learn"; render();
+  SUBVIEW = "study"; ROUTE = "learn"; render(); track("study_start", { mode: STUDY.mode, n: STUDY.ids.length });
 }
 function startPracticeSession(ids, title){
   if(ids.length===0){ toast("No questions match that filter yet."); return; }
   STUDY = { mode:"practice", ids: ids, index:0, title: title||"Practice Session",
     correctCount:0, locked:false, selectedLetter:null, showConfidence:false, explainMore:false, freshKey:newFreshKey(), returnRoute:"practice" };
-  SUBVIEW = "study"; ROUTE = "practice"; render();
+  SUBVIEW = "study"; ROUTE = "practice"; render(); track("study_start", { mode: STUDY.mode, n: STUDY.ids.length });
 }
 function startDailyChallenge(){
   const today = todayStr();
@@ -1771,12 +1930,12 @@ function startDailyChallenge(){
   const ids = shuffle(QUESTIONS.map(function(q){return q.id;})).slice(0,10);
   STUDY = { mode:"daily", ids: ids, index:0, title:"Daily ETEC Challenge",
     correctCount:0, locked:false, selectedLetter:null, showConfidence:false, explainMore:false, freshKey:newFreshKey(), returnRoute:"dashboard" };
-  SUBVIEW = "study"; ROUTE = "dashboard"; render();
+  SUBVIEW = "study"; ROUTE = "dashboard"; render(); track("study_start", { mode: STUDY.mode, n: STUDY.ids.length });
 }
 function startRetry(qid){
   STUDY = { mode:"retry", ids:[qid], index:0, title:"Retry Question",
     correctCount:0, locked:false, selectedLetter:null, showConfidence:false, explainMore:false, freshKey:newFreshKey(), returnRoute:"mistakes" };
-  SUBVIEW = "study"; ROUTE = "mistakes"; render();
+  SUBVIEW = "study"; ROUTE = "mistakes"; render(); track("study_start", { mode: STUDY.mode, n: STUDY.ids.length });
 }
 
 function currentStudyQuestion(){ return QMAP[STUDY.ids[STUDY.index]]; }
@@ -1881,6 +2040,7 @@ function renderSessionSummary(){
       '<button class="btn btn-primary" id="summary-done">Back to '+ (STUDY.returnRoute==="dashboard"?"Dashboard":titleCase(STUDY.returnRoute)) +'</button>' +
       (STUDY.mode==="practice"?'<button class="btn btn-ghost" id="summary-again">Practice Again</button>':"") +
     '</div>' +
+    (STUDY.mode==="learn" ? certBanner() : "") +
   '</div>';
 }
 function titleCase(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
@@ -1926,6 +2086,7 @@ function attachStudyHandlers(){
       updateReviewBucket(q.id, STATE.answers[q.id].correct, val);
       STATE.answers[q.id].confidence = val;
       saveState();
+      track("confidence", { category: q.category, correct: STATE.answers[q.id].correct, confidence: val });
       document.getElementById("confidence-row").innerHTML = '<span style="font-size:12px;color:var(--good);font-weight:600;">Noted — thanks.</span>';
     });
   });
@@ -1963,7 +2124,7 @@ function attachStudyHandlers(){
           saveState();
         }
       }
-      if(STUDY.mode==="learn"){ STATE.learnIndex = 0; STATE.learnOrder = shuffle(QUESTIONS.map(function(q){return q.id;})); saveState(); }
+      if(STUDY.mode==="learn"){ STATE.learnCompletedAt = STATE.learnCompletedAt || new Date().toISOString(); STATE.learnIndex = 0; STATE.learnOrder = shuffle(QUESTIONS.map(function(q){return q.id;})); saveState(); }
       STUDY.done = true; renderView(); return;
     }
     STUDY.index++;
@@ -2119,6 +2280,7 @@ function startMainExam(examKey){
   EXAM = { examKey: examKey, examTitle: exam.title, partIndex: 0, parts: parts, startedAt: Date.now(), lastResult: null };
   activateExamPart(0);
   SUBVIEW = "mock-session"; ROUTE = "mock"; render();
+  track("mock_start", { mode: examKey });
 }
 
 function activateExamPart(i){
@@ -2299,6 +2461,7 @@ function submitMainExam(){
   logSession("mock", correct, total);
   saveState();
   EXAM.lastResult = attempt;
+  track("mock_complete", { mode: EXAM.examKey, pct: scorePct, n: total, sec: timeTakenSec, data: { correct: correct, unanswered: unanswered, domains: topicBreakdown } });
   SUBVIEW = "mock-result"; render();
 }
 
@@ -2324,6 +2487,7 @@ function renderMockResult(){
     html += '<div class="bar-row"><div class="name">'+p.label+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pc+'%;background:'+(pc>=70?"var(--good)":pc>=50?"var(--gold)":"var(--bad)")+';"></div></div><div class="pct num">'+p.correct+'/'+p.total+' · '+pc+'%</div></div>';
   });
   html += '</div>';
+  html += certBanner();
   html += '<div style="margin-top:22px;display:flex;gap:10px;"><button class="btn btn-primary" id="mock-result-done">Back to Main Exams</button><button class="btn btn-ghost" id="mock-result-dash">Go to Dashboard</button></div>';
   return html;
 }
@@ -2336,6 +2500,162 @@ function attachMockResultHandlers(){
 
 window.addEventListener("beforeunload", function(e){
   if(SUBVIEW === "mock-session" && EXAM){ e.preventDefault(); e.returnValue = ""; }
+});
+
+
+// ================= Certificate =================
+// Rule (set by Said): a certificate is earned by EITHER finishing the Learn section
+// OR passing Main Exam 1, 2 and 3 (best attempt of each at or above CERT_PASS_PCT).
+const CERT_PASS_PCT = 70;
+const CERT_LOGO_F = "M217.042 194.848L217.042 204.712C214.012 205.059 211.009 205.526 208.059 206.127C205.683 206.594 203.334 207.141 201.011 207.755C197.955 208.57 194.965 209.504 192.015 210.558C183.606 213.575 175.65 217.539 168.282 222.331C162.422 226.162 156.936 230.5 151.891 235.319C150.65 236.507 149.435 237.708 148.247 238.949L148.247 311.468C147.419 312.336 146.619 313.23 145.791 314.138C143.709 316.487 141.867 319.077 139.517 322.027L139.517 288.724C139.517 271.158 139.517 253.579 139.491 236.013L139.25 235.773L139.25 235.386L134.112 230.247L134.112 230.634L133.244 229.766C133.271 251.47 133.257 273.16 133.257 294.864C132.643 295.531 132.043 296.199 131.429 296.893C129.346 299.255 127.491 301.831 125.168 304.781L125.168 294.503C125.168 269.222 125.168 243.942 125.128 218.661L125.128 216.565C125.382 216.258 125.636 215.951 125.903 215.657C126.864 214.509 127.851 213.388 128.866 212.294C130.561 210.465 132.31 208.69 134.112 206.968C147.633 194.087 164.331 184.503 182.898 179.498C185.888 178.697 188.931 178.003 192.015 177.442C194.978 176.895 197.981 176.468 201.011 176.161L201.011 186.199C198.288 186.599 195.592 187.093 192.949 187.68C192.642 187.747 192.322 187.827 192.015 187.894C185.821 189.335 179.815 191.271 174.048 193.687C167.321 196.49 160.928 199.934 154.921 203.925C148.1 208.45 141.8 213.695 136.127 219.555L137.288 220.716L141.173 224.601L144.203 227.63L144.536 227.964C145.684 226.816 146.845 225.695 148.033 224.601C160.46 213.161 175.437 204.459 192.015 199.44C194.965 198.545 197.968 197.771 201.011 197.117C203.334 196.61 205.683 196.183 208.059 195.822C208.486 195.756 208.9 195.702 209.327 195.649C211.876 195.288 214.439 195.035 217.042 194.848Z";
+const CERT_LOGO_S = "M108.283 217.74C109.297 218.474 110.298 219.235 111.286 220.009C113.342 221.611 115.344 223.293 117.279 225.041L117.279 213.989C115.344 212.241 113.342 210.559 111.286 208.957C110.298 208.183 109.297 207.422 108.283 206.688C94.014 196.263 77.236 189.082 59.029 186.226C58.028 186.052 57.027 185.919 56.026 185.785C54.051 185.532 52.048 185.318 50.033 185.171L50.033 225.695C52.048 225.842 54.051 226.056 56.026 226.309C57.027 226.443 58.028 226.576 59.029 226.75C77.236 229.606 94.014 236.787 108.283 247.212C108.445 247.33 108.602 247.456 108.764 247.575L108.764 259.215C108.602 259.096 108.445 258.969 108.283 258.851C94.014 248.427 77.236 241.246 59.029 238.389C58.028 238.216 57.027 238.082 56.026 237.949C54.051 237.695 52.048 237.481 50.033 237.335L50.033 248.387C52.048 248.534 54.051 248.747 56.026 249.001C57.027 249.134 58.028 249.268 59.029 249.441C77.236 252.298 94.014 259.479 108.283 269.903C108.445 270.021 108.602 270.148 108.764 270.267L108.764 270.277L108.778 270.277C109.621 270.898 110.461 271.526 111.286 272.173C113.342 273.774 115.344 275.456 117.279 277.205L117.279 270.277L117.279 244.649L117.279 243.461C115.344 241.713 113.342 240.031 111.286 238.429C110.298 237.655 109.297 236.894 108.283 236.16C94.014 225.735 77.236 218.554 59.029 215.698L59.029 197.278C77.236 200.134 94.014 207.315 108.283 217.74Z";
+
+function certEligibility(){
+  const exams = ["1","2","3"].map(function(k){ const b = examBestScore(k); return { key:k, best:b, passed: b!==null && b>=CERT_PASS_PCT }; });
+  const examsPassed = exams.every(function(e){ return e.passed; });
+  const learnDone = !!STATE.learnCompletedAt;
+  return { exams:exams, examsPassed:examsPassed, learnDone:learnDone, eligible: examsPassed || learnDone, via: examsPassed ? "exams" : (learnDone ? "learn" : null) };
+}
+
+function certBanner(){
+  if(!certEligibility().eligible) return "";
+  return '<div class="cert-banner"><div style="flex:1;min-width:200px;"><div class="t">Certificate unlocked</div><div class="s">You have met the requirements for the ETEC Master Exam Trainer certificate.</div></div>' +
+    '<button class="btn btn-primary" data-cert-go="1">Get my certificate</button></div>';
+}
+
+function certLaurel(cx, flip){
+  let out = "";
+  for(let i=0;i<7;i++){
+    const th = (-58 + i*19.3) * Math.PI/180;
+    const x = cx - 80*Math.cos(th), y = 372 + 80*Math.sin(th);
+    const rot = (-th*180/Math.PI) - 90 + (i%2? 22 : -22);
+    out += '<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="7" ry="16" transform="rotate('+rot.toFixed(1)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="url(#cg)"/>';
+  }
+  out = '<path d="M '+(cx-80*Math.cos(-1.02)).toFixed(1)+' '+(372+80*Math.sin(-1.02)).toFixed(1)+' A 80 80 0 0 0 '+(cx-80*Math.cos(1.02)).toFixed(1)+' '+(372+80*Math.sin(1.02)).toFixed(1)+'" fill="none" stroke="url(#cg)" stroke-width="2.5"/>' + out;
+  return flip ? '<g transform="translate(1080 0) scale(-1 1)">'+out+'</g>' : '<g>'+out+'</g>';
+}
+
+function certificateSVG(name, issuedISO){
+  const n = escapeHtml(name);
+  const dateTxt = new Date(issuedISO).toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" });
+  const nameSize = Math.max(30, Math.min(66, Math.floor(470 / (Math.max(name.length,1) * 0.56))));
+  const bodySize = name.length > 34 ? 20 : (name.length > 24 ? 22 : 24);
+  const serif = "Georgia, 'Times New Roman', serif";
+  const script = "'Segoe Script','Brush Script MT','Lucida Handwriting',cursive";
+  const NAVY = "#161E54", RED = "#FF5151";
+  const ribbon =
+    '<polygon points="0,0 200,0 0,130" fill="'+NAVY+'"/>' +
+    '<polygon points="200,0 270,0 0,175 0,130" fill="'+RED+'"/>' +
+    '<line x1="200" y1="0" x2="0" y2="130" stroke="#D4A63A" stroke-width="3"/>' +
+    '<line x1="270" y1="0" x2="0" y2="175" stroke="#D4A63A" stroke-width="3"/>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 781" width="1080" height="781" font-family="'+serif.replace(/"/g,"'")+'">' +
+    '<defs>' +
+      '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFEFA"/><stop offset="1" stop-color="#F6EEDB"/></linearGradient>' +
+      '<linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C99A2E"/><stop offset="0.5" stop-color="#E6C566"/><stop offset="1" stop-color="#9A6B10"/></linearGradient>' +
+      '<path id="sealArc" d="M 566 610 A 44 44 0 0 1 654 610"/>' +
+    '</defs>' +
+    '<rect width="1080" height="781" fill="url(#bg)"/>' +
+    '<g>'+ribbon+'</g><g transform="rotate(180 540 390.5)">'+ribbon+'</g>' +
+    '<rect x="28" y="28" width="1024" height="725" fill="none" stroke="url(#cg)" stroke-width="3.5"/>' +
+    '<rect x="40" y="40" width="1000" height="701" fill="none" stroke="url(#cg)" stroke-width="1.3"/>' +
+    // logo mark (S red, F navy)
+    '<svg x="486" y="60" width="108" height="93.2" viewBox="50.033 176.161 169.125 145.875"><path d="'+CERT_LOGO_S+'" fill="'+RED+'"/><path d="'+CERT_LOGO_F+'" fill="'+NAVY+'"/></svg>' +
+    '<text x="540" y="238" text-anchor="middle" font-size="76" font-weight="700" fill="'+NAVY+'">Certificate <tspan font-size="40" font-style="italic" font-weight="400" fill="#B8892B">of</tspan> <tspan fill="url(#cg)">Achievement</tspan></text>' +
+    '<line x1="300" y1="262" x2="780" y2="262" stroke="#C99A2E" stroke-width="1.5"/><polygon points="540,254 548,262 540,270 532,262" fill="url(#cg)"/>' +
+    '<text x="540" y="318" text-anchor="middle" font-size="19" letter-spacing="5" font-weight="600" fill="'+NAVY+'">PRESENTED TO</text>' +
+    certLaurel(285,false) + certLaurel(285,true) +
+    '<text x="540" y="'+(372+nameSize*0.32).toFixed(0)+'" text-anchor="middle" font-size="'+nameSize+'" font-weight="700" fill="'+NAVY+'">'+n+'</text>' +
+    '<line x1="300" y1="432" x2="780" y2="432" stroke="#C99A2E" stroke-width="1.5"/><polygon points="540,424 548,432 540,440 532,432" fill="url(#cg)"/>' +
+    '<text x="540" y="494" text-anchor="middle" font-size="'+bodySize+'" fill="'+NAVY+'">This certificate is proudly presented to <tspan font-weight="700">'+n+'</tspan></text>' +
+    '<text x="540" y="526" text-anchor="middle" font-size="'+bodySize+'" fill="'+NAVY+'">in recognition of successfully completing the <tspan font-weight="700">ETEC Master Exam Trainer</tspan>.</text>' +
+    '<text x="380" y="602" text-anchor="middle" font-size="52" font-style="italic" font-weight="700" fill="'+NAVY+'">Well done!</text>' +
+    '<text x="380" y="632" text-anchor="middle" font-size="16" fill="#B8892B" letter-spacing="8">&#9733; &#9733; &#9733;</text>' +
+    // seal
+    '<circle cx="610" cy="610" r="60" fill="#FFFEFA" stroke="'+NAVY+'" stroke-width="3"/><circle cx="610" cy="610" r="52" fill="none" stroke="'+NAVY+'" stroke-width="1"/>' +
+    '<text font-size="12.5" letter-spacing="2.5" font-weight="700" fill="'+NAVY+'" font-family="Arial, sans-serif"><textPath href="#sealArc" startOffset="50%" text-anchor="middle">SAID HASSAN</textPath></text>' +
+    '<svg x="584" y="585" width="52" height="44.8" viewBox="50.033 176.161 169.125 145.875"><path d="'+CERT_LOGO_S+'" fill="'+RED+'"/><path d="'+CERT_LOGO_F+'" fill="'+NAVY+'"/></svg>' +
+    '<text x="610" y="647" text-anchor="middle" font-size="15" font-weight="700" fill="'+NAVY+'" font-family="Tahoma, Arial, sans-serif">&#1587;&#1593;&#1610;&#1583; &#1581;&#1587;&#1606;</text>' +
+    // plate
+    '<rect x="370" y="696" width="340" height="30" rx="3" fill="'+NAVY+'" stroke="url(#cg)" stroke-width="2"/>' +
+    '<text x="540" y="716" text-anchor="middle" font-size="11" letter-spacing="1.2" font-weight="600" fill="#fff" font-family="Arial, sans-serif">ETEC MASTER EXAM TRAINER COMPLETION</text>' +
+    // date + signature
+    '<text x="250" y="664" text-anchor="middle" font-size="24" fill="'+NAVY+'">'+escapeHtml(dateTxt)+'</text>' +
+    '<line x1="145" y1="680" x2="355" y2="680" stroke="#C99A2E" stroke-width="1.5"/><text x="250" y="706" text-anchor="middle" font-size="17" fill="#5C6287">Date</text>' +
+    '<text x="835" y="666" text-anchor="middle" font-size="34" fill="'+NAVY+'" font-family="'+script.replace(/"/g,"'")+'" font-style="italic">Said Hassan</text>' +
+    '<line x1="740" y1="680" x2="930" y2="680" stroke="#C99A2E" stroke-width="1.5"/><text x="835" y="706" text-anchor="middle" font-size="17" fill="#5C6287">Signature</text>' +
+  '</svg>';
+}
+
+function renderCertificate(){
+  const el = certEligibility();
+  const learnPct = pct(Math.min(STATE.learnIndex||0, TOTAL_Q), TOTAL_Q);
+  const check = function(ok, label, note){
+    return '<div class="cert-check"><div class="dot'+(ok?' ok':'')+'">'+(ok?'&#10003;':'')+'</div><div style="flex:1;"><div style="font-weight:600;">'+label+'</div>'+(note?'<div style="font-size:12px;color:var(--ink-muted);">'+note+'</div>':'')+'</div></div>';
+  };
+  let html = '<div class="card card-pad" style="max-width:720px;">' +
+    '<h2 style="font-size:17px;margin-bottom:6px;">ETEC Master Exam Trainer Certificate</h2>' +
+    '<p style="color:var(--ink-muted);font-size:13.5px;margin-bottom:14px;">Earn it either way: finish the whole <b>Learn</b> section, or pass <b>Main Exam 1, 2 and 3</b> with at least '+CERT_PASS_PCT+'% in each (your best attempt counts).</p>' +
+    check(el.learnDone, "Learn section completed", el.learnDone ? "Finished" : "Progress: question "+Math.min((STATE.learnIndex||0)+1,TOTAL_Q)+" of "+TOTAL_Q+" ("+learnPct+"%)") +
+    el.exams.map(function(e){
+      return check(e.passed, "Main Exam "+e.key+" passed ("+CERT_PASS_PCT+"%+)", e.best===null ? "Not attempted yet" : "Best score so far: "+e.best+"%");
+    }).join("") +
+  '</div>';
+  if(!el.eligible) return html;
+  const c = STATE.certificate;
+  html += '<div class="card card-pad" style="max-width:720px;margin-top:16px;">' +
+    '<h2 style="font-size:16px;margin-bottom:6px;">'+(c?"Certificate holder name":"Certificate unlocked")+'</h2>' +
+    '<p style="color:var(--ink-muted);font-size:13px;margin-bottom:10px;">Type your name exactly as it should appear (check the spelling).</p>' +
+    '<input id="cert-name" class="cert-name-input" type="text" maxlength="40" placeholder="Full name" value="'+escapeHtml(c?c.name:"")+'"/>' +
+    '<div style="margin-top:12px;"><button class="btn btn-primary" id="cert-make">'+(c?"Update name":"Create my certificate")+'</button></div>' +
+  '</div>';
+  if(c){
+    html += '<div id="cert-wrap">'+certificateSVG(c.name, c.issuedAt)+'</div>' +
+      '<div style="max-width:900px;margin:14px auto 0;display:flex;gap:10px;flex-wrap:wrap;">' +
+        '<button class="btn btn-primary" id="cert-png">Download PNG</button>' +
+        '<button class="btn btn-ghost" id="cert-print">Print / Save as PDF</button>' +
+      '</div>';
+  }
+  return html;
+}
+
+function after_certificate(){
+  const make = document.getElementById("cert-make");
+  if(make) make.addEventListener("click", function(){
+    const name = (document.getElementById("cert-name").value || "").replace(/\s+/g," ").trim();
+    if(!name){ toast("Please type your name first."); return; }
+    const el = certEligibility();
+    if(!el.eligible) return;
+    STATE.certificate = { name:name, issuedAt: (STATE.certificate && STATE.certificate.issuedAt) || new Date().toISOString(), via: el.via };
+    track("certificate_created", { mode: el.via });
+    saveState(); renderView(); toast("Certificate ready.");
+  });
+  const png = document.getElementById("cert-png");
+  if(png) png.addEventListener("click", function(){
+    const c = STATE.certificate; if(!c) return;
+    const svg = certificateSVG(c.name, c.issuedAt);
+    const img = new Image();
+    img.onload = function(){
+      const cv = document.createElement("canvas"); cv.width = 2160; cv.height = 1562;
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      cv.toBlob(function(b){
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(b);
+        a.download = "ETEC-Certificate-"+c.name.replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"")+".png";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+      }, "image/png");
+    };
+    img.onerror = function(){ toast("Could not create the PNG — use Print / Save as PDF instead."); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+  const pr = document.getElementById("cert-print");
+  if(pr) pr.addEventListener("click", function(){ window.print(); });
+}
+
+document.addEventListener("click", function(e){
+  const b = e.target.closest && e.target.closest("[data-cert-go]");
+  if(!b) return;
+  EXAM = null; STUDY = null; SUBVIEW = null; navigate("certificate");
 });
 
 
@@ -2690,6 +3010,7 @@ function attachSearchHandlers(){
 
 // ================= Boot =================
 document.addEventListener("DOMContentLoaded", function(){
+  telemetryInit();
   render();
 });
 </script>
