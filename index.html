@@ -1863,7 +1863,7 @@ function drawSignIn(message){
         '<p class="auth-sub">We sent a code to <b>'+escapeHtml(SIGNIN.email)+'</b>. Enter it below. It works for 10 minutes. If you don\'t see the email, check your spam folder.</p>' +
         '<form id="code-form" novalidate>' +
           '<div class="pf-field"><label for="si-code">Sign-in code</label>' +
-            '<input class="pf-input auth-code" id="si-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required></div>' +
+            '<input class="pf-input auth-code" id="si-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456" required></div>' +
           '<button class="btn btn-primary auth-wide" type="submit" id="si-verify">Sign in</button>' +
         '</form>' +
         '<div class="auth-links"><button class="linkbtn" type="button" id="si-resend">Send a new code</button><span aria-hidden="true">·</span>' +
@@ -1884,6 +1884,11 @@ function drawSignIn(message){
   if(first) first.focus();
   if(codeStep){
     document.getElementById("code-form").addEventListener("submit", submitCode);
+    // Keep only digits and show them as "123 456" while typing or pasting.
+    document.getElementById("si-code").addEventListener("input", function(){
+      const d = this.value.replace(/\D/g, "").slice(0, 6);
+      this.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d;
+    });
     document.getElementById("si-change").addEventListener("click", function(){ SIGNIN.step = "email"; drawSignIn(); });
     document.getElementById("si-resend").addEventListener("click", function(){ sendCode(SIGNIN.email, true); });
     tickResend();
@@ -1923,7 +1928,7 @@ function sendCode(email, resend){
 function submitCode(e){
   e.preventDefault();
   const code = document.getElementById("si-code").value.replace(/\s+/g, "");
-  if(!/^\d{6,8}$/.test(code)){ setAuthMsg(authMessage("bad_code"), true); return; }
+  if(!/^\d{6}$/.test(code)){ setAuthMsg(authMessage("bad_code"), true); return; }
   const btn = document.getElementById("si-verify");
   btn.disabled = true;
   setAuthMsg("Signing in…");
