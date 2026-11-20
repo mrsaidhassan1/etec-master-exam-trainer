@@ -378,6 +378,14 @@
     .trap-pair{grid-template-columns:1fr;}
     .trap-vs{display:none;}
   }
+  @media (max-width:900px){
+    .exam-layout{grid-template-columns:minmax(0,1fr) !important;}
+    .exam-layout > *{min-width:0;}
+    .exam-side{order:-1;}
+    .exam-side .nav-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:6px;}
+    .exam-side .nav-grid button{flex:0 0 40px;}
+    .exam-legend,.exam-note{display:none !important;}
+  }
   @media (max-width:760px){
     #app{flex-direction:column;}
     .sidebar{position:fixed;top:0;left:0;bottom:0;width:min(290px,84vw);flex:none;height:100%;z-index:60;transform:translateX(-105%);transition:transform .22s ease;box-shadow:0 0 30px rgba(0,0,0,.45);}
@@ -3180,7 +3188,7 @@ function renderMockSession(){
   '</div>';
   left += '</div>';
 
-  let right = '<div class="card card-pad">' +
+  let right = '<div class="card card-pad exam-side">' +
     '<div style="text-align:center;margin-bottom:14px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-muted);">Time Remaining — Part '+(EXAM.partIndex+1)+'</div>' +
     '<div id="mock-timer" class="num" style="font-size:28px;font-weight:700;">'+fmtTime(part.remainingSec)+'</div></div>' +
     '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-muted);margin-bottom:10px;"><span>'+answeredCount+' answered</span><span>'+(part.ids.length-answeredCount)+' remaining</span></div>' +
@@ -3194,14 +3202,14 @@ function renderMockSession(){
       return '<button class="'+cls+'" data-jump="'+i+'">'+(i+1)+'</button>';
     }).join("") +
     '</div>' +
-    '<div style="display:flex;gap:10px;margin-top:14px;font-size:11.5px;color:var(--ink-muted);flex-wrap:wrap;">' +
+    '<div class="exam-legend" style="display:flex;gap:10px;margin-top:14px;font-size:11.5px;color:var(--ink-muted);flex-wrap:wrap;">' +
       '<span><span style="display:inline-block;width:9px;height:9px;background:var(--navy-tint);border:1px solid var(--navy);border-radius:2px;"></span> Answered</span>' +
       '<span><span style="display:inline-block;width:9px;height:9px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:2px;"></span> Flagged</span>' +
     '</div>' +
-    '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11.5px;color:var(--ink-faint);">No going back once a part is finished or its time runs out — this navigator only covers the current part.</div>' +
+    '<div class="exam-note" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11.5px;color:var(--ink-faint);">No going back once a part is finished or its time runs out — this navigator only covers the current part.</div>' +
   '</div>';
 
-  return stepper + '<div style="display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start;">'+left+right+'</div>';
+  return stepper + '<div class="exam-layout" style="display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start;">'+left+right+'</div>';
 }
 
 function attachMockSessionHandlers(){
