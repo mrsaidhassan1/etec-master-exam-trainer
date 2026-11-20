@@ -1644,9 +1644,8 @@ function tShowBanner(){
 }
 
 function telemetryFootHtml(){
-  if(!TELEMETRY.ENDPOINT || T_OFF) return "";
-  const label = T.consent === "yes" ? "On" : (T.consent === "no" ? "Off" : "Not set");
-  return '<div style="margin-bottom:8px;"><a href="#" data-action="usage-settings" style="color:inherit;text-decoration:underline;">Usage statistics: ' + label + '</a></div>';
+  // The "Usage statistics: On/Off" footer link was removed on request (20 Nov 2026).
+  return "";
 }
 
 function telemetryInit(){
