@@ -7,7 +7,7 @@
 <meta name="description" content="Interactive ETEC trainer/instructor exam prep app — practice questions, mock exams, revision notes, weak-area analysis, spaced practice and progress tracking.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
 <style>
   /* ===== Design tokens ===== */
   :root{
@@ -398,6 +398,67 @@
     #cert-wrap,#cert-wrap *{visibility:visible !important;}
     #cert-wrap{position:fixed;left:0;top:0;width:100vw;max-width:none;margin:0;box-shadow:none;border-radius:0;}
   }
+  /* ---- Sign-in, profile, account and admin ---- */
+  .auth-screen{flex:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--sidebar);}
+  .auth-card{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:32px 28px;width:100%;max-width:440px;}
+  .auth-card-wide{max-width:520px;}
+  .auth-card h1{font-size:22px;margin:16px 0 6px;}
+  .auth-mark{width:46px;height:46px;border-radius:12px;background:var(--sidebar);display:flex;align-items:center;justify-content:center;}
+  .auth-mark img{width:30px;height:auto;}
+  .auth-sub{color:var(--ink-muted);font-size:14px;line-height:1.55;margin:0 0 20px;}
+  .auth-wide{width:100%;justify-content:center;}
+  .auth-links{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--ink-muted);}
+  .linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;font:inherit;cursor:pointer;}
+  .linkbtn:disabled{opacity:.55;cursor:not-allowed;text-decoration:none;}
+  .auth-code{font-family:var(--font-mono);font-size:22px;letter-spacing:.25em;text-align:center;}
+  .auth-msg,.pf-msg{min-height:20px;font-size:13px;color:var(--ink-muted);line-height:1.45;}
+  .auth-msg{text-align:center;}
+  .auth-msg.err,.pf-msg.err{color:var(--bad);}
+  .auth-fine{font-size:12px;color:var(--ink-faint);margin:16px 0 0;line-height:1.5;text-align:center;}
+  .auth-fine a,.acct-note a,.pf-consent a,.acct-line a{color:inherit;text-decoration:underline;}
+  .pf-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .pf-field label{font-size:12.5px;font-weight:600;color:var(--ink);}
+  .pf-field .hint{font-size:11.5px;color:var(--ink-faint);}
+  .pf-input{width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit;}
+  .pf-input:focus{outline:2px solid var(--navy);outline-offset:1px;}
+  textarea.pf-input{resize:vertical;line-height:1.5;}
+  .pf-consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;margin:4px 0 12px;color:var(--ink-muted);}
+  .pf-consent input{margin-top:3px;width:16px;height:16px;flex:0 0 auto;}
+  .pf-consent .ar{display:block;margin-top:4px;}
+  .pf-actions,.acct-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  [lang="ar"]{font-family:"IBM Plex Sans Arabic", var(--font-body);}
+  .acct-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .acct-row span:first-child{color:var(--ink-muted);}
+  .acct-row b{font-weight:600;overflow-wrap:anywhere;text-align:right;}
+  .acct-note{font-size:12.5px;color:var(--ink-muted);line-height:1.55;margin:14px 0 4px;}
+  .acct-line{margin-bottom:8px;line-height:1.5;}
+  .acct-line b{color:#fff;font-weight:600;}
+  .acct-role{display:inline-block;margin-left:4px;padding:0 6px;border-radius:10px;font-size:10px;background:#FF5151;color:#fff;font-weight:700;letter-spacing:.03em;}
+  .announce{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:16px 26px 0;padding:10px 14px;border-radius:10px;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);font-size:13.5px;line-height:1.5;}
+  .admin-tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:18px;}
+  .admin-tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;font:inherit;font-size:13.5px;color:var(--ink-muted);cursor:pointer;margin-bottom:-1px;}
+  .admin-tab.active{color:var(--ink);border-bottom-color:var(--ink);font-weight:600;}
+  .admin-tab:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px;margin-top:16px;}
+  .admin-grid .card{min-width:0;}
+  .admin-h{font-size:14.5px;margin:0 0 6px;}
+  .admin-note{font-size:12px;color:var(--ink-muted);line-height:1.5;margin:0 0 10px;}
+  .admin-table-wrap{overflow-x:auto;}
+  .admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .admin-table th,.admin-table td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  .admin-table th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;white-space:nowrap;}
+  .admin-table .num{text-align:right;font-family:var(--font-mono);white-space:nowrap;}
+  .admin-table .sub{font-size:11.5px;color:var(--ink-faint);margin-top:2px;overflow-wrap:anywhere;}
+  .admin-table td:first-child{min-width:180px;}
+  .admin-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .admin-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+  .admin-search{max-width:340px;}
+  .admin-select{width:auto;}
+  .modal .privacy{max-height:55vh;overflow:auto;font-size:13px;line-height:1.6;}
+  .modal .privacy p{margin:0 0 10px;}
+  .modal .privacy hr{border:0;border-top:1px solid var(--border);margin:14px 0;}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  @media (max-width:760px){ .announce{margin:12px 16px 0;} .auth-card{padding:26px 20px;} }
 </style>
 </head>
 <body>
@@ -1499,8 +1560,8 @@ function logSession(type, correct, total){
 // study/mock sessions, mock scores by domain, active time, device class.
 // NOT collected: names, emails, IP addresses, question text, which option was picked.
 const TELEMETRY = {
-  ENDPOINT: "https://script.google.com/macros/s/AKfycbzkPaJaewuJXMgOwxE_HVLDAWh6bJYKojWweIXe6fX0sUxRODo3bNDR2tUNc7vUXF80_g/exec",   // <- paste the deployed Apps Script web-app URL here (empty = collection disabled)
-  TOKEN: "mEcOFPqsdHLBUSBMehhGPc2W3s_ROORw44BUjyYReaM",      // <- same shared token as TOKEN in the Apps Script
+  ENDPOINT: "https://script.google.com/macros/s/AKfycbzkPaJaewuJXMgOwxE_HVLDAWh6bJYKojWweIXe6fX0sUxRODo3bNDR2tUNc7vUXF80_g/exec",   // Apps Script web-app URL (empty = collection disabled)
+  TOKEN: "mEcOFPqsdHLBUSBMehhGPc2W3s_ROORw44BUjyYReaM",      // shared token, must match TOKEN in the Apps Script
   VERSION: "v2-2026-11-16",
   KEY: "etecMasterTrainer_usage_v1",
   FLUSH_MS: 20000, MAX_QUEUE: 300, BATCH: 40
@@ -1541,9 +1602,10 @@ function track(event, data){
 
 function tFlush(){
   if(!tEnabled() || T.consent !== "yes" || T_FLUSHING || !T.queue.length) return;
+  if(authEnabled() && !signedIn()) return;   // keep the queue until someone is signed in
   T_FLUSHING = true;
   const batch = T.queue.slice(0, TELEMETRY.BATCH);
-  const body = JSON.stringify({ token: TELEMETRY.TOKEN, events: batch });
+  const body = JSON.stringify(authEnabled() ? { session: SESSION.token, events: batch } : { token: TELEMETRY.TOKEN, events: batch });
   fetch(TELEMETRY.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: body })
     .then(function(){
       const sent = {}; batch.forEach(function(e){ sent[e.eid] = 1; });
@@ -1595,8 +1657,10 @@ function telemetryInit(){
     e.preventDefault();
     const on = T.consent === "yes";
     openModal({
-      title: "Anonymous usage statistics",
-      body: "These are " + (on ? "currently <b>on</b>" : "currently <b>off</b>") + ". When on, this browser sends a random ID plus which sections you use, topic-level scores, mock exam results and time spent. No name, email or answer content is sent. Your study progress stays in this browser either way.",
+      title: authEnabled() ? "Usage statistics" : "Anonymous usage statistics",
+      body: "These are " + (on ? "currently <b>on</b>" : "currently <b>off</b>") + ". " + (authEnabled()
+        ? "When on, the sections you use, topic-level scores, Main Exam results and time spent are linked to your account so the administrator can follow your preparation. Question text and the option you picked are never sent. Your study progress stays in this browser either way."
+        : "When on, this browser sends a random ID plus which sections you use, topic-level scores, mock exam results and time spent. No name, email or answer content is sent. Your study progress stays in this browser either way."),
       confirmLabel: on ? "Turn off" : "Turn on",
       danger: on,
       onConfirm: function(){ tSetConsent(on ? "no" : "yes"); render(); toast(on ? "Usage statistics off." : "Usage statistics on. Thank you."); }
@@ -1611,19 +1675,726 @@ function telemetryInit(){
   });
   window.addEventListener("pagehide", function(){ tFlush(); });
   setInterval(tFlush, TELEMETRY.FLUSH_MS);
-  if(T.consent === null) tShowBanner();
+  if(T.consent === null && !authEnabled()) tShowBanner();   // with sign-in, consent is given on the profile form
   const returning = !!(T.queue.length || localStorage.getItem(TELEMETRY.KEY + "_seen"));
   try{ localStorage.setItem(TELEMETRY.KEY + "_seen", "1"); }catch(e){}
   track("app_open", { returning: returning });
-  // One-time baseline of progress that already existed in this browser (counts only)
-  if(!T.baselineSent){
-    T.baselineSent = true; tSave();
-    const answered = Object.keys(STATE.answers).length;
-    if(answered || STATE.sessionHistory.length || STATE.mockAttempts.length){
-      track("baseline", { answered: answered, sessions: STATE.sessionHistory.length, mocks: STATE.mockAttempts.length,
-        bestMock: STATE.bestMockScore, bestStreak: STATE.streak.best, learnDone: !!STATE.learnCompletedAt, cert: !!STATE.certificate });
+  // One-time report of study done in this browser BEFORE it started sending usage (counts only).
+  // Version 2 replaces the first version, whose counts the collector did not store.
+  if(!T.baselineV2Sent){
+    T.baselineSent = true; T.baselineV2Sent = true; tSave();
+    const report = preTrackingReport();
+    if(report) track("baseline", { data: report });
+  }
+}
+
+// Counts of everything this browser recorded before T.first (when it first loaded the tracked version).
+// Sends no question IDs, question text or chosen options: only totals and answers per day.
+function preTrackingReport(){
+  const cutoff = Date.parse(T.first);
+  if(isNaN(cutoff)) return null;
+  const cutoffDay = new Date(cutoff).toISOString().slice(0, 10);
+  const toMs = function(v){ return typeof v === "number" ? v : Date.parse(v); };
+  const day = function(ms){ return new Date(ms).toISOString().slice(0, 10); };
+
+  let attempts = 0, correct = 0, questions = 0, first = null;
+  const days = {};
+  Object.keys(STATE.answers).forEach(function(qid){
+    let counted = false;
+    (STATE.answers[qid].attempts || []).forEach(function(a){
+      const at = toMs(a.at);
+      if(isNaN(at) || at >= cutoff) return;
+      attempts++; if(a.correct) correct++;
+      if(!counted){ questions++; counted = true; }
+      if(first === null || at < first) first = at;
+      const d = day(at); days[d] = days[d] || [0, 0]; days[d][0]++; if(a.correct) days[d][1]++;
+    });
+  });
+
+  const sessions = (STATE.sessionHistory || []).filter(function(s){ return s.date && s.date < cutoffDay && s.type !== "mock"; });
+  const mocks = (STATE.mockAttempts || []).filter(function(m){ const t = toMs(m.dateFinished); return !isNaN(t) && t < cutoff; });
+  const before = function(iso){ const t = toMs(iso); return !isNaN(t) && t < cutoff; };
+  const learnDone = !!STATE.learnCompletedAt && before(STATE.learnCompletedAt);
+  const cert = !!(STATE.certificate && before(STATE.certificate.issuedAt));
+  if(!attempts && !sessions.length && !mocks.length && !learnDone && !cert) return null;
+
+  let dayKeys = Object.keys(days).sort().slice(-180);
+  const perDay = {}; dayKeys.forEach(function(d){ perDay[d] = days[d]; });
+  // Keep the report under the collector's 6,000-character cell limit by dropping the oldest days if needed.
+  while(dayKeys.length && JSON.stringify(perDay).length > 4800){ delete perDay[dayKeys.shift()]; }
+  sessions.forEach(function(s){ if(s.date < (first === null ? "9999" : day(first))) first = Date.parse(s.date); });
+  const scores = mocks.map(function(m){ return Number(m.pct); }).filter(function(n){ return !isNaN(n); });
+  return {
+    v: 2,
+    before: T.first,                       // everything counted happened before this moment
+    first_activity: first === null ? null : day(first),
+    active_days: Object.keys(days).length,
+    questions_answered: questions,         // distinct questions
+    attempts: attempts, correct: correct,
+    sessions: sessions.length,
+    sessions_by_type: sessions.reduce(function(o, s){ o[s.type] = (o[s.type] || 0) + 1; return o; }, {}),
+    mocks_finished: mocks.length,
+    mock_best: scores.length ? Math.max.apply(null, scores) : null,
+    mock_avg: scores.length ? Math.round(scores.reduce(function(a, b){ return a + b; }, 0) / scores.length) : null,
+    learn_completed: learnDone,
+    certificate: cert,
+    per_day: perDay                        // "YYYY-MM-DD": [answers, correct]
+  };
+}
+
+// Brand mark used in the sidebar and on the sign-in screen.
+const BRAND_MARK_SRC = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjkuMTI1IiBoZWlnaHQ9IjE0NS44NzUiIHZpZXdCb3g9IjUwLjAzMyAxNzYuMTYxIDE2OS4xMjUgMTQ1Ljg3NSI+Cjx0aXRsZT5TYWlkIEhhc3NhbiDigJQgU0ggbWFyayAoV2hpdGUpPC90aXRsZT4KPHBhdGggZD0iTTIxNy4wNDIgMTk0Ljg0OEwyMTcuMDQyIDIwNC43MTJDMjE0LjAxMiAyMDUuMDU5IDIxMS4wMDkgMjA1LjUyNiAyMDguMDU5IDIwNi4xMjdDMjA1LjY4MyAyMDYuNTk0IDIwMy4zMzQgMjA3LjE0MSAyMDEuMDExIDIwNy43NTVDMTk3Ljk1NSAyMDguNTcgMTk0Ljk2NSAyMDkuNTA0IDE5Mi4wMTUgMjEwLjU1OEMxODMuNjA2IDIxMy41NzUgMTc1LjY1IDIxNy41MzkgMTY4LjI4MiAyMjIuMzMxQzE2Mi40MjIgMjI2LjE2MiAxNTYuOTM2IDIzMC41IDE1MS44OTEgMjM1LjMxOUMxNTAuNjUgMjM2LjUwNyAxNDkuNDM1IDIzNy43MDggMTQ4LjI0NyAyMzguOTQ5TDE0OC4yNDcgMzExLjQ2OEMxNDcuNDE5IDMxMi4zMzYgMTQ2LjYxOSAzMTMuMjMgMTQ1Ljc5MSAzMTQuMTM4QzE0My43MDkgMzE2LjQ4NyAxNDEuODY3IDMxOS4wNzcgMTM5LjUxNyAzMjIuMDI3TDEzOS41MTcgMjg4LjcyNEMxMzkuNTE3IDI3MS4xNTggMTM5LjUxNyAyNTMuNTc5IDEzOS40OTEgMjM2LjAxM0wxMzkuMjUgMjM1Ljc3M0wxMzkuMjUgMjM1LjM4NkwxMzQuMTEyIDIzMC4yNDdMMTM0LjExMiAyMzAuNjM0TDEzMy4yNDQgMjI5Ljc2NkMxMzMuMjcxIDI1MS40NyAxMzMuMjU3IDI3My4xNiAxMzMuMjU3IDI5NC44NjRDMTMyLjY0MyAyOTUuNTMxIDEzMi4wNDMgMjk2LjE5OSAxMzEuNDI5IDI5Ni44OTNDMTI5LjM0NiAyOTkuMjU1IDEyNy40OTEgMzAxLjgzMSAxMjUuMTY4IDMwNC43ODFMMTI1LjE2OCAyOTQuNTAzQzEyNS4xNjggMjY5LjIyMiAxMjUuMTY4IDI0My45NDIgMTI1LjEyOCAyMTguNjYxTDEyNS4xMjggMjE2LjU2NUMxMjUuMzgyIDIxNi4yNTggMTI1LjYzNiAyMTUuOTUxIDEyNS45MDMgMjE1LjY1N0MxMjYuODY0IDIxNC41MDkgMTI3Ljg1MSAyMTMuMzg4IDEyOC44NjYgMjEyLjI5NEMxMzAuNTYxIDIxMC40NjUgMTMyLjMxIDIwOC42OSAxMzQuMTEyIDIwNi45NjhDMTQ3LjYzMyAxOTQuMDg3IDE2NC4zMzEgMTg0LjUwMyAxODIuODk4IDE3OS40OThDMTg1Ljg4OCAxNzguNjk3IDE4OC45MzEgMTc4LjAwMyAxOTIuMDE1IDE3Ny40NDJDMTk0Ljk3OCAxNzYuODk1IDE5Ny45ODEgMTc2LjQ2OCAyMDEuMDExIDE3Ni4xNjFMMjAxLjAxMSAxODYuMTk5QzE5OC4yODggMTg2LjU5OSAxOTUuNTkyIDE4Ny4wOTMgMTkyLjk0OSAxODcuNjhDMTkyLjY0MiAxODcuNzQ3IDE5Mi4zMjIgMTg3LjgyNyAxOTIuMDE1IDE4Ny44OTRDMTg1LjgyMSAxODkuMzM1IDE3OS44MTUgMTkxLjI3MSAxNzQuMDQ4IDE5My42ODdDMTY3LjMyMSAxOTYuNDkgMTYwLjkyOCAxOTkuOTM0IDE1NC45MjEgMjAzLjkyNUMxNDguMSAyMDguNDUgMTQxLjggMjEzLjY5NSAxMzYuMTI3IDIxOS41NTVMMTM3LjI4OCAyMjAuNzE2TDE0MS4xNzMgMjI0LjYwMUwxNDQuMjAzIDIyNy42M0wxNDQuNTM2IDIyNy45NjRDMTQ1LjY4NCAyMjYuODE2IDE0Ni44NDUgMjI1LjY5NSAxNDguMDMzIDIyNC42MDFDMTYwLjQ2IDIxMy4xNjEgMTc1LjQzNyAyMDQuNDU5IDE5Mi4wMTUgMTk5LjQ0QzE5NC45NjUgMTk4LjU0NSAxOTcuOTY4IDE5Ny43NzEgMjAxLjAxMSAxOTcuMTE3QzIwMy4zMzQgMTk2LjYxIDIwNS42ODMgMTk2LjE4MyAyMDguMDU5IDE5NS44MjJDMjA4LjQ4NiAxOTUuNzU2IDIwOC45IDE5NS43MDIgMjA5LjMyNyAxOTUuNjQ5QzIxMS44NzYgMTk1LjI4OCAyMTQuNDM5IDE5NS4wMzUgMjE3LjA0MiAxOTQuODQ4WiIgZmlsbD0iI2ZmZmZmZiI+PC9wYXRoPgo8cGF0aCBkPSJNMTA4LjI4MyAyMTcuNzRDMTA5LjI5NyAyMTguNDc0IDExMC4yOTggMjE5LjIzNSAxMTEuMjg2IDIyMC4wMDlDMTEzLjM0MiAyMjEuNjExIDExNS4zNDQgMjIzLjI5MyAxMTcuMjc5IDIyNS4wNDFMMTE3LjI3OSAyMTMuOTg5QzExNS4zNDQgMjEyLjI0MSAxMTMuMzQyIDIxMC41NTkgMTExLjI4NiAyMDguOTU3QzExMC4yOTggMjA4LjE4MyAxMDkuMjk3IDIwNy40MjIgMTA4LjI4MyAyMDYuNjg4Qzk0LjAxNCAxOTYuMjYzIDc3LjIzNiAxODkuMDgyIDU5LjAyOSAxODYuMjI2QzU4LjAyOCAxODYuMDUyIDU3LjAyNyAxODUuOTE5IDU2LjAyNiAxODUuNzg1QzU0LjA1MSAxODUuNTMyIDUyLjA0OCAxODUuMzE4IDUwLjAzMyAxODUuMTcxTDUwLjAzMyAyMjUuNjk1QzUyLjA0OCAyMjUuODQyIDU0LjA1MSAyMjYuMDU2IDU2LjAyNiAyMjYuMzA5QzU3LjAyNyAyMjYuNDQzIDU4LjAyOCAyMjYuNTc2IDU5LjAyOSAyMjYuNzVDNzcuMjM2IDIyOS42MDYgOTQuMDE0IDIzNi43ODcgMTA4LjI4MyAyNDcuMjEyQzEwOC40NDUgMjQ3LjMzIDEwOC42MDIgMjQ3LjQ1NiAxMDguNzY0IDI0Ny41NzVMMTA4Ljc2NCAyNTkuMjE1QzEwOC42MDIgMjU5LjA5NiAxMDguNDQ1IDI1OC45NjkgMTA4LjI4MyAyNTguODUxQzk0LjAxNCAyNDguNDI3IDc3LjIzNiAyNDEuMjQ2IDU5LjAyOSAyMzguMzg5QzU4LjAyOCAyMzguMjE2IDU3LjAyNyAyMzguMDgyIDU2LjAyNiAyMzcuOTQ5QzU0LjA1MSAyMzcuNjk1IDUyLjA0OCAyMzcuNDgxIDUwLjAzMyAyMzcuMzM1TDUwLjAzMyAyNDguMzg3QzUyLjA0OCAyNDguNTM0IDU0LjA1MSAyNDguNzQ3IDU2LjAyNiAyNDkuMDAxQzU3LjAyNyAyNDkuMTM0IDU4LjAyOCAyNDkuMjY4IDU5LjAyOSAyNDkuNDQxQzc3LjIzNiAyNTIuMjk4IDk0LjAxNCAyNTkuNDc5IDEwOC4yODMgMjY5LjkwM0MxMDguNDQ1IDI3MC4wMjEgMTA4LjYwMiAyNzAuMTQ4IDEwOC43NjQgMjcwLjI2N0wxMDguNzY0IDI3MC4yNzdMMTA4Ljc3OCAyNzAuMjc3QzEwOS42MjEgMjcwLjg5OCAxMTAuNDYxIDI3MS41MjYgMTExLjI4NiAyNzIuMTczQzExMy4zNDIgMjczLjc3NCAxMTUuMzQ0IDI3NS40NTYgMTE3LjI3OSAyNzcuMjA1TDExNy4yNzkgMjcwLjI3N0wxMTcuMjc5IDI0NC42NDlMMTE3LjI3OSAyNDMuNDYxQzExNS4zNDQgMjQxLjcxMyAxMTMuMzQyIDI0MC4wMzEgMTExLjI4NiAyMzguNDI5QzExMC4yOTggMjM3LjY1NSAxMDkuMjk3IDIzNi44OTQgMTA4LjI4MyAyMzYuMTZDOTQuMDE0IDIyNS43MzUgNzcuMjM2IDIxOC41NTQgNTkuMDI5IDIxNS42OThMNTkuMDI5IDE5Ny4yNzhDNzcuMjM2IDIwMC4xMzQgOTQuMDE0IDIwNy4zMTUgMTA4LjI4MyAyMTcuNzRaIiBmaWxsPSIjZmZmZmZmIj48L3BhdGg+Cjwvc3ZnPg==";
+
+// ================= Sign-in (email code) and roles =================
+// Sign-in is on when AUTH.ENABLED is true and TELEMETRY.ENDPOINT points at the Apps Script (usage-collector/Code.gs).
+// Until then the app works exactly as before, with no sign-in.
+// People type their email address and receive a one-time code. The server checks the code, decides each person's
+// role and signs the session. Nothing on this page can make someone an admin: admin data is only ever returned
+// by the server after it checks the role.
+const AUTH = {
+  ENABLED: true,   // set to true after the Apps Script is updated and deployed (see usage-collector/SETUP.md)
+  KEY: "etecMasterTrainer_session_v1",
+  UI_KEY: "etecMasterTrainer_authui_v1",
+  CONSENT_VERSION: "2026-11-20"
+};
+function authEnabled(){ return AUTH.ENABLED === true && !!TELEMETRY.ENDPOINT; }
+
+let SESSION = (function(){
+  try{
+    const s = JSON.parse(localStorage.getItem(AUTH.KEY));
+    if(s && s.token && s.user && s.expires > Date.now()) return s;
+  }catch(e){}
+  return null;
+})();
+let AUTH_UI = (function(){
+  try{ const v = JSON.parse(localStorage.getItem(AUTH.UI_KEY)); if(v && typeof v === "object") return v; }catch(e){}
+  return {};
+})();
+let ANNOUNCEMENT = null;
+let APP_STARTED = false;
+
+function saveSession(){ try{ if(SESSION) localStorage.setItem(AUTH.KEY, JSON.stringify(SESSION)); else localStorage.removeItem(AUTH.KEY); }catch(e){} }
+function saveAuthUi(){ try{ localStorage.setItem(AUTH.UI_KEY, JSON.stringify(AUTH_UI)); }catch(e){} }
+function signedIn(){ return !!(SESSION && SESSION.expires > Date.now()); }
+function isAdmin(){ return signedIn() && SESSION.user.role === "admin"; }
+
+const AUTH_MESSAGES = {
+  not_configured: "Sign-in isn't set up on the server yet. The administrator needs to finish the setup.",
+  invalid_email: "Enter a valid email address.",
+  bad_code: "That code isn't right. Check it and try again.",
+  code_expired: "That code has expired. Ask for a new one.",
+  too_many_attempts: "Too many wrong codes. Wait 15 minutes and try again.",
+  mail_quota: "The daily email limit was reached. Please try again tomorrow.",
+  mail_failed: "We couldn't send the email. Check the address and try again.",
+  suspended: "This account has been suspended. Contact the administrator.",
+  deleted: "This account was deleted. Contact the administrator if this is a mistake.",
+  session_expired: "Your session has ended. Please sign in again.",
+  bad_session: "Your session has ended. Please sign in again.",
+  account_inactive: "This account is no longer active. Please sign in again.",
+  rate_limited: "Too many attempts. Wait a few minutes and try again.",
+  name_required: "Enter your name.",
+  bad_exam_date: "Enter a valid exam date.",
+  consent_required: "Tick the box to accept the privacy notice.",
+  forbidden: "You don't have permission to do that.",
+  cannot_change_admin: "Admin accounts can't be changed here.",
+  admin_cannot_self_delete: "The admin account can't be deleted from the app.",
+  not_found: "That account no longer exists.",
+  network: "Couldn't reach the server. Check your connection and try again."
+};
+function authMessage(code){ return AUTH_MESSAGES[code] || "Something went wrong. Please try again."; }
+
+function isAuthAction(action){ return action === "request_code" || action === "verify_code"; }
+
+function api(action, payload){
+  const body = Object.assign({ action: action }, payload || {});
+  if(SESSION && !isAuthAction(action)) body.session = SESSION.token;
+  return fetch(TELEMETRY.ENDPOINT, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+    .then(function(r){ return r.json(); })
+    .catch(function(){ return { ok:false, error:"network" }; })
+    .then(function(res){
+      if(res && res.ok) return res;
+      const code = (res && res.error) || "server_error";
+      if(!isAuthAction(action) && ["bad_session","session_expired","account_inactive","suspended"].indexOf(code) !== -1){
+        signOut(authMessage(code));
+      }
+      const err = new Error(authMessage(code)); err.code = code; throw err;
+    });
+}
+
+function downloadFile(name, text, type){
+  const url = URL.createObjectURL(new Blob([text], { type: type }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+function brandMarkHtml(){
+  return '<div class="auth-mark"><img src="'+BRAND_MARK_SRC+'" alt=""></div>';
+}
+
+// ---------- Email-code sign-in ----------
+const CODE_RESEND_SECONDS = 30;
+let SIGNIN = { step: "email", email: "", resendAt: 0, timer: null };
+
+function setAuthMsg(text, isError){
+  const el = document.getElementById("auth-msg");
+  if(!el) return;
+  el.textContent = text || "";
+  el.classList.toggle("err", !!isError);
+}
+
+function renderSignIn(message){
+  closeModal();
+  SIGNIN.step = "email"; SIGNIN.email = ""; SIGNIN.resendAt = 0;
+  drawSignIn(message);
+}
+
+function drawSignIn(message){
+  if(SIGNIN.timer){ clearInterval(SIGNIN.timer); SIGNIN.timer = null; }
+  const codeStep = SIGNIN.step === "code";
+  document.getElementById("app").innerHTML =
+    '<div class="auth-screen"><div class="auth-card">' +
+      brandMarkHtml() +
+      '<h1>ETEC Master Exam Trainer</h1>' +
+      (codeStep ?
+        '<p class="auth-sub">We sent a code to <b>'+escapeHtml(SIGNIN.email)+'</b>. Enter it below. It works for 10 minutes. If you don\'t see the email, check your spam folder.</p>' +
+        '<form id="code-form" novalidate>' +
+          '<div class="pf-field"><label for="si-code">Sign-in code</label>' +
+            '<input class="pf-input auth-code" id="si-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required></div>' +
+          '<button class="btn btn-primary auth-wide" type="submit" id="si-verify">Sign in</button>' +
+        '</form>' +
+        '<div class="auth-links"><button class="linkbtn" type="button" id="si-resend">Send a new code</button><span aria-hidden="true">·</span>' +
+          '<button class="linkbtn" type="button" id="si-change">Use a different email</button></div>'
+      :
+        '<p class="auth-sub">Enter your email address and we\'ll email you a code to sign in. No password needed. Practice questions, Main Exams, revision and your progress are all inside.</p>' +
+        '<form id="email-form" novalidate>' +
+          '<div class="pf-field"><label for="si-email">Email address</label>' +
+            '<input class="pf-input" id="si-email" type="email" inputmode="email" autocomplete="email" maxlength="100" required value="'+escapeHtml(SIGNIN.email)+'"></div>' +
+          '<button class="btn btn-primary auth-wide" type="submit" id="si-send">Email me a code</button>' +
+        '</form>') +
+      '<div class="auth-msg" id="auth-msg" role="status" aria-live="polite"></div>' +
+      '<p class="auth-fine">By signing in you agree to the <a href="#" data-action="privacy">privacy notice</a> · <a href="#" data-action="privacy" lang="ar" dir="rtl">إشعار الخصوصية</a></p>' +
+      '<p class="auth-fine">Independent ETEC preparation resource, not an official ETEC platform.</p>' +
+    '</div></div>';
+  if(message) setAuthMsg(message, true);
+  const first = document.getElementById(codeStep ? "si-code" : "si-email");
+  if(first) first.focus();
+  if(codeStep){
+    document.getElementById("code-form").addEventListener("submit", submitCode);
+    document.getElementById("si-change").addEventListener("click", function(){ SIGNIN.step = "email"; drawSignIn(); });
+    document.getElementById("si-resend").addEventListener("click", function(){ sendCode(SIGNIN.email, true); });
+    tickResend();
+    SIGNIN.timer = setInterval(tickResend, 1000);
+  } else {
+    document.getElementById("email-form").addEventListener("submit", function(e){
+      e.preventDefault();
+      sendCode(document.getElementById("si-email").value, false);
+    });
+  }
+}
+
+function tickResend(){
+  const b = document.getElementById("si-resend");
+  if(!b){ if(SIGNIN.timer){ clearInterval(SIGNIN.timer); SIGNIN.timer = null; } return; }
+  const left = Math.ceil((SIGNIN.resendAt - Date.now()) / 1000);
+  b.disabled = left > 0;
+  b.textContent = left > 0 ? "Send a new code (" + left + "s)" : "Send a new code";
+}
+
+function sendCode(email, resend){
+  email = String(email || "").trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)){ setAuthMsg(authMessage("invalid_email"), true); return; }
+  const btn = document.getElementById(resend ? "si-resend" : "si-send");
+  if(btn) btn.disabled = true;
+  setAuthMsg("Sending…");
+  api("request_code", { email: email }).then(function(){
+    SIGNIN.email = email.toLowerCase(); SIGNIN.step = "code"; SIGNIN.resendAt = Date.now() + CODE_RESEND_SECONDS * 1000;
+    drawSignIn();
+    setAuthMsg("Code sent. Check your inbox.");
+  }).catch(function(e){
+    setAuthMsg(e.message, true);
+    if(btn && !resend) btn.disabled = false;
+  });
+}
+
+function submitCode(e){
+  e.preventDefault();
+  const code = document.getElementById("si-code").value.replace(/\s+/g, "");
+  if(!/^\d{6,8}$/.test(code)){ setAuthMsg(authMessage("bad_code"), true); return; }
+  const btn = document.getElementById("si-verify");
+  btn.disabled = true;
+  setAuthMsg("Signing in…");
+  api("verify_code", { email: SIGNIN.email, code: code, uid: T.uid }).then(completeSignIn).catch(function(err){
+    setAuthMsg(err.message, true);
+    const b = document.getElementById("si-verify");
+    if(b) b.disabled = false;
+  });
+}
+
+function completeSignIn(res){
+  SESSION = { token: res.session, expires: res.expires, user: res.user };
+  saveSession();
+  ANNOUNCEMENT = res.announcement || null;
+  AUTH_UI.resetSeen = AUTH_UI.resetSeen || {};
+  if(!(res.user.user_id in AUTH_UI.resetSeen)){ AUTH_UI.resetSeen[res.user.user_id] = res.user.reset_at || ""; saveAuthUi(); }
+  if(!res.user.profile_done) renderProfileForm(true);
+  else startApp();
+}
+
+function signOut(message){
+  // Send this person's unsent events under their own session now, so they are never credited to the next person.
+  if(SESSION && T.queue.length && T.consent === "yes" && !T_OFF){
+    for(let i = 0; i < T.queue.length; i += TELEMETRY.BATCH){
+      try{
+        fetch(TELEMETRY.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" },
+          body: JSON.stringify({ session: SESSION.token, events: T.queue.slice(i, i + TELEMETRY.BATCH) }) }).catch(function(){});
+      }catch(e){}
     }
   }
+  T.queue = []; tSave();
+  SESSION = null; saveSession();
+  SUBVIEW = null; ROUTE = "dashboard";
+  if(EXAM && examTimerHandle){ clearInterval(examTimerHandle); }
+  renderSignIn(message);
+}
+
+// ---------- Profile & consent ----------
+function profileFormHtml(user, first){
+  const needsConsent = first || !user.profile_done;
+  return (
+    '<form id="profile-form" novalidate>' +
+      '<div class="pf-field"><label for="pf-name">Full name</label>' +
+        '<input class="pf-input" id="pf-name" type="text" maxlength="60" autocomplete="name" required value="'+escapeHtml(user.name||"")+'"></div>' +
+      '<div class="pf-field"><label for="pf-org">Organisation or training centre</label>' +
+        '<input class="pf-input" id="pf-org" type="text" maxlength="80" autocomplete="organization" value="'+escapeHtml(user.organisation||"")+'"></div>' +
+      '<div class="pf-field"><label for="pf-city">City</label>' +
+        '<input class="pf-input" id="pf-city" type="text" maxlength="60" autocomplete="address-level2" value="'+escapeHtml(user.city||"")+'"></div>' +
+      '<div class="pf-field"><label for="pf-exam">Planned exam date</label>' +
+        '<input class="pf-input" id="pf-exam" type="date" min="2024-01-01" max="2030-12-31" value="'+escapeHtml(user.exam_date||"")+'">' +
+        '<span class="hint">Optional. Leave empty if you haven\'t booked yet.</span></div>' +
+      (needsConsent ?
+        '<label class="pf-consent"><input type="checkbox" id="pf-consent">' +
+          '<span>I have read the <a href="#" data-action="privacy">privacy notice</a> and agree that my account details and study activity are stored as it describes.' +
+          '<span class="ar" lang="ar" dir="rtl">قرأت إشعار الخصوصية وأوافق على حفظ بيانات حسابي ونشاطي الدراسي كما هو موضّح فيه.</span></span></label>' : '') +
+      '<div class="pf-msg" id="pf-msg" role="status" aria-live="polite"></div>' +
+      '<div class="pf-actions"><button class="btn btn-primary" type="submit" id="pf-save">'+(first ? "Continue" : "Save changes")+'</button>' +
+        (first ? '<button class="btn btn-ghost" type="button" data-action="sign-out">Use another account</button>' : '') + '</div>' +
+    '</form>'
+  );
+}
+
+function attachProfileForm(first){
+  const form = document.getElementById("profile-form");
+  if(!form) return;
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    const msg = document.getElementById("pf-msg");
+    const name = document.getElementById("pf-name").value.trim();
+    const exam = document.getElementById("pf-exam").value;
+    const consentBox = document.getElementById("pf-consent");
+    const show = function(t, err){ msg.textContent = t; msg.classList.toggle("err", !!err); };
+    if(!name){ show(authMessage("name_required"), true); document.getElementById("pf-name").focus(); return; }
+    if(consentBox && !consentBox.checked){ show(authMessage("consent_required"), true); consentBox.focus(); return; }
+    const btn = document.getElementById("pf-save"); btn.disabled = true; show("Saving…");
+    api("profile", {
+      name: name,
+      organisation: document.getElementById("pf-org").value,
+      city: document.getElementById("pf-city").value,
+      exam_date: exam,
+      consent: consentBox ? consentBox.checked : undefined
+    }).then(function(res){
+      SESSION.user = res.user; saveSession();
+      if(consentBox && T.consent !== "no"){ T.consent = "yes"; tSave(); }
+      if(first){ startApp(); toast("Welcome, " + res.user.name + "."); }
+      else { render(); toast("Profile saved."); }
+    }).catch(function(e2){ if(document.getElementById("pf-msg")){ show(e2.message, true); btn.disabled = false; } });
+  });
+}
+
+function renderProfileForm(first){
+  closeModal();
+  const app = document.getElementById("app");
+  app.innerHTML =
+    '<div class="auth-screen"><div class="auth-card auth-card-wide">' +
+      brandMarkHtml() +
+      '<h1>' + (first ? "Welcome" : "Your profile") + '</h1>' +
+      '<p class="auth-sub">Signed in as <b>'+escapeHtml(SESSION.user.email)+'</b>. Tell us a little about yourself so the trainer can support your preparation.</p>' +
+      profileFormHtml(SESSION.user, true) +
+    '</div></div>';
+  attachProfileForm(true);
+}
+
+// ---------- Starting the app ----------
+function startApp(){
+  if(!APP_STARTED){
+    APP_STARTED = true;
+    telemetryInit();
+    setInterval(function(){ if(SESSION && SESSION.expires < Date.now()) signOut(authMessage("session_expired")); }, 60000);
+  }
+  render();
+  refreshMe();
+}
+
+function refreshMe(){
+  if(!authEnabled() || !signedIn()) return;
+  api("me").then(function(res){
+    const before = JSON.stringify([SESSION.user, ANNOUNCEMENT]);
+    SESSION.user = res.user; saveSession();
+    ANNOUNCEMENT = res.announcement || null;
+    applyReset(res.user);
+    if(!res.user.profile_done){ renderProfileForm(true); return; }
+    const busy = SUBVIEW === "study" || SUBVIEW === "mock-session";
+    if(!busy && before !== JSON.stringify([SESSION.user, ANNOUNCEMENT])) render();
+  }).catch(function(){});
+}
+
+function applyReset(user){
+  AUTH_UI.resetSeen = AUTH_UI.resetSeen || {};
+  const seen = AUTH_UI.resetSeen[user.user_id];
+  if(user.reset_at && seen !== undefined && user.reset_at !== seen){
+    resetAllProgress();
+    AUTH_UI.resetSeen[user.user_id] = user.reset_at; saveAuthUi();
+    SUBVIEW = null; ROUTE = "dashboard"; render();
+    toast("Your progress was reset by the administrator.");
+  } else if(seen === undefined){
+    AUTH_UI.resetSeen[user.user_id] = user.reset_at || ""; saveAuthUi();
+  }
+}
+
+function navItems(){
+  const items = NAV_ITEMS.slice();
+  if(authEnabled() && signedIn()) items.push({ id: "account", label: "My Account", icon: "user" });
+  if(authEnabled() && isAdmin()) items.push({ id: "admin", label: "Admin", icon: "shield" });
+  return items;
+}
+
+function accountFootHtml(){
+  if(!authEnabled() || !signedIn()) return "";
+  return '<div class="acct-line">Signed in as <b>'+escapeHtml(SESSION.user.name || SESSION.user.email)+'</b>' +
+    (isAdmin() ? ' <span class="acct-role">Admin</span>' : '') +
+    ' · <a href="#" data-action="sign-out">Sign out</a></div>';
+}
+
+function announcementHtml(){
+  if(!authEnabled() || !ANNOUNCEMENT || !ANNOUNCEMENT.text || AUTH_UI.dismissed === ANNOUNCEMENT.at) return "";
+  return '<div class="announce" role="status"><span>'+escapeHtml(ANNOUNCEMENT.text)+'</span>' +
+    '<button class="btn btn-ghost btn-sm" type="button" data-action="dismiss-announce">Dismiss</button></div>';
+}
+
+const PRIVACY_HTML =
+  '<div class="privacy">' +
+    '<p><b>Privacy notice</b> (version ' + AUTH.CONSENT_VERSION + ')</p>' +
+    '<p><b>What is collected:</b> your name and email address, and an account ID derived from your email address; the organisation, city and planned exam date you enter; and how you use the trainer (sections opened, results by topic, Main Exam scores and time spent). The question text and the option you picked are never collected.</p>' +
+    '<p><b>Why:</b> to run your account (including emailing you sign-in codes), understand how the trainer is used, and improve it.</p>' +
+    '<p><b>Who can see it:</b> only the trainer\'s administrator (Said Hassan). It is stored in a private Google Sheet on Google\'s servers, which may be outside Saudi Arabia. It is never sold or shared.</p>' +
+    '<p><b>How long it is kept:</b> until you delete your account, or 12 months after your planned exam date, whichever comes first.</p>' +
+    '<p><b>Your rights:</b> you can view and edit your profile, download your data and delete your account at any time from My Account. For anything else, use the feedback email in the sidebar.</p>' +
+    '<p>Your study progress (answers, bookmarks, exam history) is saved in this browser only.</p>' +
+    '<hr>' +
+    '<div lang="ar" dir="rtl">' +
+      '<p><b>إشعار الخصوصية</b> (الإصدار ' + AUTH.CONSENT_VERSION + ')</p>' +
+      '<p><b>ما نجمعه:</b> اسمك وبريدك الإلكتروني ومعرّف حساب مشتق من بريدك، والجهة والمدينة وموعد الاختبار المتوقع التي تُدخلها، وطريقة استخدامك للمدرّب (الأقسام التي تفتحها، ونتائجك حسب الموضوع، ودرجات الاختبارات الرئيسية، والوقت المستغرق). لا نجمع أبدًا نص الأسئلة ولا الخيار الذي اخترته.</p>' +
+      '<p><b>لماذا:</b> لتشغيل حسابك (ومنه إرسال رموز الدخول إلى بريدك)، وفهم طريقة استخدام المدرّب، وتحسينه.</p>' +
+      '<p><b>من يطّلع عليها:</b> مسؤول المدرّب فقط (Said Hassan). تُحفظ في جدول Google خاص على خوادم Google، وقد تكون خارج المملكة العربية السعودية. لا تُباع ولا تُشارك مع أي طرف.</p>' +
+      '<p><b>مدة الاحتفاظ:</b> حتى تحذف حسابك، أو 12 شهرًا بعد موعد اختبارك المتوقع، أيهما أسبق.</p>' +
+      '<p><b>حقوقك:</b> يمكنك عرض ملفك وتعديله وتنزيل بياناتك وحذف حسابك في أي وقت من صفحة «حسابي» (My Account). ولأي استفسار آخر استخدم بريد الملاحظات الظاهر في القائمة الجانبية.</p>' +
+      '<p>يُحفظ تقدّمك الدراسي (الإجابات والإشارات المرجعية وسجل الاختبارات) في هذا المتصفح فقط.</p>' +
+    '</div>' +
+  '</div>';
+
+// Clicks that can come from any screen (sign-in, profile, sidebar, My Account).
+document.addEventListener("click", function(e){
+  const t = e.target.closest ? e.target.closest("[data-action]") : null;
+  if(!t) return;
+  const a = t.getAttribute("data-action");
+  if(a === "privacy"){
+    e.preventDefault();
+    openModal({ title: "Privacy notice", body: PRIVACY_HTML, confirmLabel: "Got it", cancelLabel: "Close" });
+  } else if(a === "sign-out"){
+    e.preventDefault();
+    signOut();
+  } else if(a === "dismiss-announce"){
+    if(ANNOUNCEMENT){ AUTH_UI.dismissed = ANNOUNCEMENT.at; saveAuthUi(); }
+    const box = t.closest(".announce"); if(box) box.remove();
+  }
+});
+
+// ---------- My Account ----------
+function renderAccount(){
+  const u = SESSION.user;
+  return (
+    '<div class="two-col">' +
+      '<div class="card card-pad">' +
+        '<h2 style="font-size:15px;margin-bottom:14px;">Profile</h2>' +
+        profileFormHtml(u, false) +
+      '</div>' +
+      '<div class="card card-pad">' +
+        '<h2 style="font-size:15px;margin-bottom:14px;">Account</h2>' +
+        '<div class="acct-row"><span>Email</span><b>'+escapeHtml(u.email)+'</b></div>' +
+        '<div class="acct-row"><span>Role</span><span class="pill '+(u.role==="admin"?"pill-gold":"pill-navy")+'">'+(u.role==="admin"?"Admin":"User")+'</span></div>' +
+        '<div class="acct-row"><span>Signed in with</span><b>Email code</b></div>' +
+        '<p class="acct-note">Your study progress is saved in this browser. Your account details and usage statistics are kept by the trainer\'s administrator, as the <a href="#" data-action="privacy">privacy notice</a> describes.</p>' +
+        '<div class="acct-actions">' +
+          '<button class="btn btn-ghost" type="button" id="acct-export">Download my data</button>' +
+          '<button class="btn btn-ghost" type="button" data-action="sign-out">Sign out</button>' +
+          (u.role === "admin" ? '' : '<button class="btn btn-danger" type="button" id="acct-delete">Delete my account</button>') +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+function after_account(){
+  attachProfileForm(false);
+  const ex = document.getElementById("acct-export");
+  if(ex) ex.addEventListener("click", function(){
+    ex.disabled = true;
+    api("export_me").then(function(res){
+      downloadFile("etec-trainer-my-data.json", JSON.stringify({ account: res.user, usage_events: res.events, local_progress: STATE }, null, 2), "application/json");
+      toast("Your data was downloaded.");
+    }).catch(function(e){ toast(e.message); }).then(function(){ ex.disabled = false; });
+  });
+  const del = document.getElementById("acct-delete");
+  if(del) del.addEventListener("click", function(){
+    openModal({
+      title: "Delete your account?",
+      body: "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Study progress in this browser is not touched; use Reset Progress in the sidebar to clear it. This cannot be undone.",
+      confirmLabel: "Delete my account", danger: true,
+      onConfirm: function(){
+        api("delete_me", { confirm: "DELETE" }).then(function(){ signOut("Your account was deleted."); }).catch(function(e){ toast(e.message); });
+      }
+    });
+  });
+}
+
+// ---------- Admin ----------
+let ADMIN_TAB = "overview";
+let ADMIN_USERS = null;
+let ADMIN_FILTER = { q: "", status: "all" };
+const ADMIN_TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "users", label: "Users" },
+  { id: "announce", label: "Announcement" },
+  { id: "audit", label: "Audit log" },
+  { id: "export", label: "Export" }
+];
+
+function renderAdmin(){
+  return (
+    '<div class="admin-tabs" role="tablist" aria-label="Admin sections">' +
+      ADMIN_TABS.map(function(t){
+        return '<button class="admin-tab'+(ADMIN_TAB===t.id?' active':'')+'" type="button" role="tab" aria-selected="'+(ADMIN_TAB===t.id)+'" data-admin-tab="'+t.id+'">'+t.label+'</button>';
+      }).join("") +
+    '</div>' +
+    '<div id="admin-body"><div class="empty">Loading…</div></div>'
+  );
+}
+
+function adminBody(tab, html){
+  const el = document.getElementById("admin-body");
+  if(el && ROUTE === "admin" && ADMIN_TAB === tab) el.innerHTML = html;
+  return el && ROUTE === "admin" && ADMIN_TAB === tab ? el : null;
+}
+function adminError(tab, e){ adminBody(tab, '<div class="empty">'+escapeHtml(e.message)+'</div>'); }
+function fmtWhen(iso){
+  if(!iso) return "—";
+  const d = new Date(iso); if(isNaN(d)) return "—";
+  return d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric" }) + " " + d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
+}
+function fmtDay(s){
+  if(!s) return "—";
+  const d = new Date(String(s).slice(0,10) + "T00:00:00Z"); if(isNaN(d)) return escapeHtml(s);
+  return d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric", timeZone:"UTC" });
+}
+function tableHtml(head, rows, empty){
+  if(!rows.length) return '<div class="empty">'+(empty||"Nothing yet.")+'</div>';
+  return '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>' +
+    head.map(function(h){ return '<th'+(h.num?' class="num"':'')+'>'+h.label+'</th>'; }).join("") +
+    '</tr></thead><tbody>' + rows.join("") + '</tbody></table></div>';
+}
+
+function after_admin(){
+  if(!isAdmin()){ navigate("dashboard"); return; }
+  document.querySelectorAll("[data-admin-tab]").forEach(function(b){
+    b.addEventListener("click", function(){ ADMIN_TAB = b.getAttribute("data-admin-tab"); renderView(); });
+  });
+  ({ overview: adminOverview, users: adminUsers, announce: adminAnnounce, audit: adminAudit, export: adminExport }[ADMIN_TAB] || adminOverview)();
+}
+
+function adminOverview(){
+  api("admin_overview").then(function(r){
+    const u = r.users, a = r.answers;
+    const tiles =
+      '<div class="stat-grid">' +
+        statTile("Users", u.total, u.admins + " admin · " + u.suspended + " suspended") +
+        statTile("Active in last 7 days", u.active_7d, "Signed-in users with any activity") +
+        statTile("Exam within 30 days", u.exam_within_30d, "Active users by planned date") +
+        statTile("Questions answered", a.total.toLocaleString(), a.accuracy + "% correct overall") +
+        statTile("Answered while signed in", a.signed_in.toLocaleString(), a.signed_in ? a.signed_in_accuracy + "% correct" : "None yet") +
+        statTile("Main Exams finished", r.mocks.completed, r.mocks.average === null ? "No results yet" : "Average score " + r.mocks.average + "%") +
+      '</div>';
+    const weak = tableHtml([{label:"Topic"},{label:"Answers",num:1},{label:"Accuracy",num:1}],
+      r.weak_topics.map(function(t){ return '<tr><td>'+escapeHtml(t.topic)+'</td><td class="num">'+t.answers+'</td><td class="num">'+t.accuracy+'%</td></tr>'; }),
+      "Not enough answers yet (8 per topic).");
+    const group = function(list){
+      return tableHtml([{label:"Name"},{label:"Users",num:1},{label:"Answers",num:1},{label:"Accuracy",num:1}],
+        list.map(function(g){ return '<tr><td>'+escapeHtml(g.name)+'</td><td class="num">'+g.users+'</td><td class="num">'+g.answers+'</td><td class="num">'+(g.answers?g.accuracy+'%':'—')+'</td></tr>'; }),
+        "No users yet.");
+    };
+    const signups = tableHtml([{label:"Date"},{label:"New users",num:1}],
+      r.signups_30d.slice().reverse().map(function(s){ return '<tr><td>'+fmtDay(s.date)+'</td><td class="num">'+s.users+'</td></tr>'; }),
+      "No sign-ups in the last 30 days.");
+    adminBody("overview",
+      tiles +
+      '<div class="admin-grid">' +
+        '<div class="card card-pad"><h3 class="admin-h">Weakest topics</h3><p class="admin-note">All answers, topics with at least 8 answers.</p>'+weak+'</div>' +
+        '<div class="card card-pad"><h3 class="admin-h">Sign-ups, last 30 days</h3>'+signups+'</div>' +
+        '<div class="card card-pad"><h3 class="admin-h">By organisation</h3>'+group(r.organisations)+'</div>' +
+        '<div class="card card-pad"><h3 class="admin-h">By city</h3>'+group(r.cities)+'</div>' +
+      '</div>' +
+      '<p class="admin-note">Updated '+fmtWhen(r.generated_at)+'. Answers from before sign-in was switched on count in the overall figures only.</p>');
+  }).catch(function(e){ adminError("overview", e); });
+}
+
+const USER_OPS = {
+  suspend:    { label: "Suspend", title: "Suspend this user?", body: "They are signed out and can't sign in until you reactivate them.", danger: true },
+  reactivate: { label: "Reactivate", title: "Reactivate this user?", body: "They can sign in again straight away." },
+  reset:      { label: "Reset progress", title: "Reset this user's progress?", body: "Their answers, bookmarks and exam history are cleared on each device the next time they open the trainer. This cannot be undone.", danger: true },
+  "delete":   { label: "Delete", title: "Delete this user?", body: "They are signed out and can't sign in. You can restore the account for 30 days; after that it is erased and their usage history is unlinked from them.", danger: true },
+  restore:    { label: "Restore", title: "Restore this user?", body: "The account becomes active again." }
+};
+
+function adminUsers(){
+  const draw = function(){
+    const q = ADMIN_FILTER.q.trim().toLowerCase();
+    const list = (ADMIN_USERS || []).filter(function(u){
+      if(ADMIN_FILTER.status !== "all" && u.status !== ADMIN_FILTER.status) return false;
+      if(!q) return true;
+      return [u.name, u.email, u.organisation, u.city].join(" ").toLowerCase().indexOf(q) !== -1;
+    });
+    const rows = list.map(function(u){
+      const ops = u.role === "admin" ? [] :
+        u.status === "active" ? ["suspend", "reset", "delete"] :
+        u.status === "suspended" ? ["reactivate", "delete"] : ["restore"];
+      const statusPill = u.status === "active" ? '<span class="pill pill-good">Active</span>' :
+        u.status === "suspended" ? '<span class="pill pill-bad">Suspended</span>' : '<span class="pill pill-muted">Deleted</span>';
+      return '<tr>' +
+        '<td><div>'+escapeHtml(u.name || "—")+(u.role==="admin"?' <span class="pill pill-gold">Admin</span>':'')+'</div><div class="sub">'+escapeHtml(u.email)+'</div></td>' +
+        '<td>'+escapeHtml(u.organisation || "—")+'<div class="sub">'+escapeHtml(u.city || "")+'</div></td>' +
+        '<td>'+fmtDay(u.exam_date)+'</td>' +
+        '<td>'+statusPill+(u.status==="deleted"&&u.deleted_at?'<div class="sub">'+fmtDay(u.deleted_at)+'</div>':'')+'</td>' +
+        '<td>'+fmtWhen(u.last_active || u.last_login)+'</td>' +
+        '<td class="num">'+u.answers+'</td>' +
+        '<td class="num">'+(u.accuracy===null?'—':u.accuracy+'%')+'</td>' +
+        '<td class="num">'+(u.best_mock===null?'—':u.best_mock+'%')+'</td>' +
+        '<td><div class="admin-actions">'+ops.map(function(op){
+          return '<button class="btn btn-sm '+(USER_OPS[op].danger?'btn-danger':'btn-ghost')+'" type="button" data-uop="'+op+'" data-uid="'+escapeHtml(u.user_id)+'">'+USER_OPS[op].label+'</button>';
+        }).join("")+'</div></td>' +
+      '</tr>';
+    });
+    const el = adminBody("users",
+      '<div class="admin-toolbar">' +
+        '<input class="pf-input admin-search" id="admin-q" type="search" placeholder="Search name, email, organisation or city" aria-label="Search users" value="'+escapeHtml(ADMIN_FILTER.q)+'">' +
+        '<select class="pf-input admin-select" id="admin-status" aria-label="Filter by status">' +
+          [["all","All statuses"],["active","Active"],["suspended","Suspended"],["deleted","Deleted"]].map(function(o){
+            return '<option value="'+o[0]+'"'+(ADMIN_FILTER.status===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join("") +
+        '</select>' +
+        '<span class="admin-note">'+list.length+' of '+(ADMIN_USERS||[]).length+' users</span>' +
+      '</div>' +
+      tableHtml([{label:"User"},{label:"Organisation"},{label:"Exam date"},{label:"Status"},{label:"Last active"},{label:"Answers",num:1},{label:"Accuracy",num:1},{label:"Best exam",num:1},{label:"Actions"}],
+        rows, ADMIN_USERS && ADMIN_USERS.length ? "No users match." : "No one has signed in yet."));
+    if(!el) return;
+    const qi = document.getElementById("admin-q");
+    qi.addEventListener("input", function(){ ADMIN_FILTER.q = qi.value; const pos = qi.selectionStart; draw(); const n = document.getElementById("admin-q"); if(n){ n.focus(); try{ n.setSelectionRange(pos, pos); }catch(x){} } });
+    document.getElementById("admin-status").addEventListener("change", function(e){ ADMIN_FILTER.status = e.target.value; draw(); });
+    el.querySelectorAll("[data-uop]").forEach(function(b){
+      b.addEventListener("click", function(){
+        const op = b.getAttribute("data-uop"), uid = b.getAttribute("data-uid");
+        const target = (ADMIN_USERS || []).find(function(x){ return x.user_id === uid; });
+        const def = USER_OPS[op];
+        openModal({
+          title: def.title,
+          body: '<b>'+escapeHtml(target ? (target.name || target.email) : uid)+'</b>'+(target?' ('+escapeHtml(target.email)+')':'')+'<br><br>'+def.body,
+          confirmLabel: def.label, danger: !!def.danger,
+          onConfirm: function(){
+            api("admin_user_action", { target: uid, op: op }).then(function(){ toast(def.label + " done."); load(); })
+              .catch(function(e){ toast(e.message); });
+          }
+        });
+      });
+    });
+  };
+  const load = function(){
+    api("admin_users").then(function(r){ ADMIN_USERS = r.users; draw(); }).catch(function(e){ adminError("users", e); });
+  };
+  if(ADMIN_USERS) draw();
+  load();
+}
+
+function adminAnnounce(){
+  const cur = ANNOUNCEMENT && ANNOUNCEMENT.text ? ANNOUNCEMENT : null;
+  const el = adminBody("announce",
+    '<div class="card card-pad" style="max-width:640px;">' +
+      '<h3 class="admin-h">Announcement for all users</h3>' +
+      '<p class="admin-note">Shown at the top of the trainer until each user dismisses it. Up to 280 characters.</p>' +
+      '<label class="pf-field"><span class="sr-only">Announcement text</span>' +
+        '<textarea class="pf-input" id="ann-text" maxlength="280" rows="4" placeholder="For example: Main Exam 3 has been updated with new questions.">'+escapeHtml(cur ? cur.text : "")+'</textarea></label>' +
+      '<p class="admin-note">'+(cur ? 'Current announcement posted '+fmtWhen(cur.at)+'.' : 'No announcement is showing.')+'</p>' +
+      '<div class="acct-actions"><button class="btn btn-primary" type="button" id="ann-save">Publish</button>' +
+        (cur ? '<button class="btn btn-ghost" type="button" id="ann-clear">Remove</button>' : '') + '</div>' +
+    '</div>');
+  if(!el) return;
+  const send = function(text){
+    api("admin_announce", { text: text }).then(function(r){
+      ANNOUNCEMENT = r.announcement || null;
+      AUTH_UI.dismissed = null; saveAuthUi();
+      render(); toast(text ? "Announcement published." : "Announcement removed.");
+    }).catch(function(e){ toast(e.message); });
+  };
+  document.getElementById("ann-save").addEventListener("click", function(){
+    const v = document.getElementById("ann-text").value.trim();
+    if(!v){ toast("Write the announcement first."); return; }
+    send(v);
+  });
+  const clr = document.getElementById("ann-clear");
+  if(clr) clr.addEventListener("click", function(){ send(""); });
+}
+
+const AUDIT_LABELS = {
+  user_suspend: "Suspended user", user_reactivate: "Reactivated user", user_delete: "Deleted user", user_restore: "Restored user",
+  user_reset: "Reset progress", export_users: "Exported users", export_events: "Exported events", announce: "Published announcement",
+  announce_clear: "Removed announcement", self_delete: "User deleted own account", purge_deleted: "Erased deleted account",
+  purge_retention: "Erased account after retention period"
+};
+function adminAudit(){
+  api("admin_audit").then(function(r){
+    adminBody("audit",
+      '<p class="admin-note">The latest 200 admin actions, newest first.</p>' +
+      tableHtml([{label:"When"},{label:"By"},{label:"Action"},{label:"User"},{label:"Detail"}],
+        r.entries.map(function(x){
+          return '<tr><td>'+fmtWhen(x.at)+'</td><td>'+escapeHtml(x.admin_email || x.admin_id || "")+'</td><td>'+escapeHtml(AUDIT_LABELS[x.action] || x.action)+'</td>' +
+            '<td>'+escapeHtml(x.target_email || x.target_id || "—")+'</td><td>'+escapeHtml(x.detail || "")+'</td></tr>';
+        }), "No admin actions yet."));
+  }).catch(function(e){ adminError("audit", e); });
+}
+
+function adminExport(){
+  const el = adminBody("export",
+    '<div class="card card-pad" style="max-width:640px;">' +
+      '<h3 class="admin-h">Export as CSV</h3>' +
+      '<p class="admin-note">These files contain personal data (names, emails, organisations). Store them privately and delete them when you no longer need them. Each export is recorded in the audit log.</p>' +
+      '<div class="acct-actions"><button class="btn btn-primary" type="button" data-export="users">Download users</button>' +
+        '<button class="btn btn-ghost" type="button" data-export="events">Download usage events</button></div>' +
+    '</div>');
+  if(!el) return;
+  el.querySelectorAll("[data-export]").forEach(function(b){
+    b.addEventListener("click", function(){
+      b.disabled = true;
+      api("admin_export", { what: b.getAttribute("data-export") })
+        .then(function(r){ downloadFile(r.filename, "﻿" + r.csv, "text/csv;charset=utf-8"); toast("Downloaded " + r.filename + "."); })
+        .catch(function(e){ toast(e.message); })
+        .then(function(){ b.disabled = false; });
+    });
+  });
 }
 
 // ================= Nav / shell =================
@@ -1658,6 +2429,8 @@ const ICONS = {
   bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 3L5 13h6l-2 8 8-11h-6z"/></svg>',
   warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.2-7.5 9.5-4.4-1.3-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>',
   star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.2L12 16.9 6.4 20l1.4-6.2-4.8-4.3 6.4-.6z"/></svg>'
 };
 function icon(name){ return '<span class="ic">'+(ICONS[name]||"")+'</span>'; }
@@ -1691,7 +2464,7 @@ function renderShell(){
   app.innerHTML =
     '<div class="sidebar">' +
       '<div class="sidebar-brand"><div class="mark">' +
-        '<div class="mark-badge"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjkuMTI1IiBoZWlnaHQ9IjE0NS44NzUiIHZpZXdCb3g9IjUwLjAzMyAxNzYuMTYxIDE2OS4xMjUgMTQ1Ljg3NSI+Cjx0aXRsZT5TYWlkIEhhc3NhbiDigJQgU0ggbWFyayAoV2hpdGUpPC90aXRsZT4KPHBhdGggZD0iTTIxNy4wNDIgMTk0Ljg0OEwyMTcuMDQyIDIwNC43MTJDMjE0LjAxMiAyMDUuMDU5IDIxMS4wMDkgMjA1LjUyNiAyMDguMDU5IDIwNi4xMjdDMjA1LjY4MyAyMDYuNTk0IDIwMy4zMzQgMjA3LjE0MSAyMDEuMDExIDIwNy43NTVDMTk3Ljk1NSAyMDguNTcgMTk0Ljk2NSAyMDkuNTA0IDE5Mi4wMTUgMjEwLjU1OEMxODMuNjA2IDIxMy41NzUgMTc1LjY1IDIxNy41MzkgMTY4LjI4MiAyMjIuMzMxQzE2Mi40MjIgMjI2LjE2MiAxNTYuOTM2IDIzMC41IDE1MS44OTEgMjM1LjMxOUMxNTAuNjUgMjM2LjUwNyAxNDkuNDM1IDIzNy43MDggMTQ4LjI0NyAyMzguOTQ5TDE0OC4yNDcgMzExLjQ2OEMxNDcuNDE5IDMxMi4zMzYgMTQ2LjYxOSAzMTMuMjMgMTQ1Ljc5MSAzMTQuMTM4QzE0My43MDkgMzE2LjQ4NyAxNDEuODY3IDMxOS4wNzcgMTM5LjUxNyAzMjIuMDI3TDEzOS41MTcgMjg4LjcyNEMxMzkuNTE3IDI3MS4xNTggMTM5LjUxNyAyNTMuNTc5IDEzOS40OTEgMjM2LjAxM0wxMzkuMjUgMjM1Ljc3M0wxMzkuMjUgMjM1LjM4NkwxMzQuMTEyIDIzMC4yNDdMMTM0LjExMiAyMzAuNjM0TDEzMy4yNDQgMjI5Ljc2NkMxMzMuMjcxIDI1MS40NyAxMzMuMjU3IDI3My4xNiAxMzMuMjU3IDI5NC44NjRDMTMyLjY0MyAyOTUuNTMxIDEzMi4wNDMgMjk2LjE5OSAxMzEuNDI5IDI5Ni44OTNDMTI5LjM0NiAyOTkuMjU1IDEyNy40OTEgMzAxLjgzMSAxMjUuMTY4IDMwNC43ODFMMTI1LjE2OCAyOTQuNTAzQzEyNS4xNjggMjY5LjIyMiAxMjUuMTY4IDI0My45NDIgMTI1LjEyOCAyMTguNjYxTDEyNS4xMjggMjE2LjU2NUMxMjUuMzgyIDIxNi4yNTggMTI1LjYzNiAyMTUuOTUxIDEyNS45MDMgMjE1LjY1N0MxMjYuODY0IDIxNC41MDkgMTI3Ljg1MSAyMTMuMzg4IDEyOC44NjYgMjEyLjI5NEMxMzAuNTYxIDIxMC40NjUgMTMyLjMxIDIwOC42OSAxMzQuMTEyIDIwNi45NjhDMTQ3LjYzMyAxOTQuMDg3IDE2NC4zMzEgMTg0LjUwMyAxODIuODk4IDE3OS40OThDMTg1Ljg4OCAxNzguNjk3IDE4OC45MzEgMTc4LjAwMyAxOTIuMDE1IDE3Ny40NDJDMTk0Ljk3OCAxNzYuODk1IDE5Ny45ODEgMTc2LjQ2OCAyMDEuMDExIDE3Ni4xNjFMMjAxLjAxMSAxODYuMTk5QzE5OC4yODggMTg2LjU5OSAxOTUuNTkyIDE4Ny4wOTMgMTkyLjk0OSAxODcuNjhDMTkyLjY0MiAxODcuNzQ3IDE5Mi4zMjIgMTg3LjgyNyAxOTIuMDE1IDE4Ny44OTRDMTg1LjgyMSAxODkuMzM1IDE3OS44MTUgMTkxLjI3MSAxNzQuMDQ4IDE5My42ODdDMTY3LjMyMSAxOTYuNDkgMTYwLjkyOCAxOTkuOTM0IDE1NC45MjEgMjAzLjkyNUMxNDguMSAyMDguNDUgMTQxLjggMjEzLjY5NSAxMzYuMTI3IDIxOS41NTVMMTM3LjI4OCAyMjAuNzE2TDE0MS4xNzMgMjI0LjYwMUwxNDQuMjAzIDIyNy42M0wxNDQuNTM2IDIyNy45NjRDMTQ1LjY4NCAyMjYuODE2IDE0Ni44NDUgMjI1LjY5NSAxNDguMDMzIDIyNC42MDFDMTYwLjQ2IDIxMy4xNjEgMTc1LjQzNyAyMDQuNDU5IDE5Mi4wMTUgMTk5LjQ0QzE5NC45NjUgMTk4LjU0NSAxOTcuOTY4IDE5Ny43NzEgMjAxLjAxMSAxOTcuMTE3QzIwMy4zMzQgMTk2LjYxIDIwNS42ODMgMTk2LjE4MyAyMDguMDU5IDE5NS44MjJDMjA4LjQ4NiAxOTUuNzU2IDIwOC45IDE5NS43MDIgMjA5LjMyNyAxOTUuNjQ5QzIxMS44NzYgMTk1LjI4OCAyMTQuNDM5IDE5NS4wMzUgMjE3LjA0MiAxOTQuODQ4WiIgZmlsbD0iI2ZmZmZmZiI+PC9wYXRoPgo8cGF0aCBkPSJNMTA4LjI4MyAyMTcuNzRDMTA5LjI5NyAyMTguNDc0IDExMC4yOTggMjE5LjIzNSAxMTEuMjg2IDIyMC4wMDlDMTEzLjM0MiAyMjEuNjExIDExNS4zNDQgMjIzLjI5MyAxMTcuMjc5IDIyNS4wNDFMMTE3LjI3OSAyMTMuOTg5QzExNS4zNDQgMjEyLjI0MSAxMTMuMzQyIDIxMC41NTkgMTExLjI4NiAyMDguOTU3QzExMC4yOTggMjA4LjE4MyAxMDkuMjk3IDIwNy40MjIgMTA4LjI4MyAyMDYuNjg4Qzk0LjAxNCAxOTYuMjYzIDc3LjIzNiAxODkuMDgyIDU5LjAyOSAxODYuMjI2QzU4LjAyOCAxODYuMDUyIDU3LjAyNyAxODUuOTE5IDU2LjAyNiAxODUuNzg1QzU0LjA1MSAxODUuNTMyIDUyLjA0OCAxODUuMzE4IDUwLjAzMyAxODUuMTcxTDUwLjAzMyAyMjUuNjk1QzUyLjA0OCAyMjUuODQyIDU0LjA1MSAyMjYuMDU2IDU2LjAyNiAyMjYuMzA5QzU3LjAyNyAyMjYuNDQzIDU4LjAyOCAyMjYuNTc2IDU5LjAyOSAyMjYuNzVDNzcuMjM2IDIyOS42MDYgOTQuMDE0IDIzNi43ODcgMTA4LjI4MyAyNDcuMjEyQzEwOC40NDUgMjQ3LjMzIDEwOC42MDIgMjQ3LjQ1NiAxMDguNzY0IDI0Ny41NzVMMTA4Ljc2NCAyNTkuMjE1QzEwOC42MDIgMjU5LjA5NiAxMDguNDQ1IDI1OC45NjkgMTA4LjI4MyAyNTguODUxQzk0LjAxNCAyNDguNDI3IDc3LjIzNiAyNDEuMjQ2IDU5LjAyOSAyMzguMzg5QzU4LjAyOCAyMzguMjE2IDU3LjAyNyAyMzguMDgyIDU2LjAyNiAyMzcuOTQ5QzU0LjA1MSAyMzcuNjk1IDUyLjA0OCAyMzcuNDgxIDUwLjAzMyAyMzcuMzM1TDUwLjAzMyAyNDguMzg3QzUyLjA0OCAyNDguNTM0IDU0LjA1MSAyNDguNzQ3IDU2LjAyNiAyNDkuMDAxQzU3LjAyNyAyNDkuMTM0IDU4LjAyOCAyNDkuMjY4IDU5LjAyOSAyNDkuNDQxQzc3LjIzNiAyNTIuMjk4IDk0LjAxNCAyNTkuNDc5IDEwOC4yODMgMjY5LjkwM0MxMDguNDQ1IDI3MC4wMjEgMTA4LjYwMiAyNzAuMTQ4IDEwOC43NjQgMjcwLjI2N0wxMDguNzY0IDI3MC4yNzdMMTA4Ljc3OCAyNzAuMjc3QzEwOS42MjEgMjcwLjg5OCAxMTAuNDYxIDI3MS41MjYgMTExLjI4NiAyNzIuMTczQzExMy4zNDIgMjczLjc3NCAxMTUuMzQ0IDI3NS40NTYgMTE3LjI3OSAyNzcuMjA1TDExNy4yNzkgMjcwLjI3N0wxMTcuMjc5IDI0NC42NDlMMTE3LjI3OSAyNDMuNDYxQzExNS4zNDQgMjQxLjcxMyAxMTMuMzQyIDI0MC4wMzEgMTExLjI4NiAyMzguNDI5QzExMC4yOTggMjM3LjY1NSAxMDkuMjk3IDIzNi44OTQgMTA4LjI4MyAyMzYuMTZDOTQuMDE0IDIyNS43MzUgNzcuMjM2IDIxOC41NTQgNTkuMDI5IDIxNS42OThMNTkuMDI5IDE5Ny4yNzhDNzcuMjM2IDIwMC4xMzQgOTQuMDE0IDIwNy4zMTUgMTA4LjI4MyAyMTcuNzRaIiBmaWxsPSIjZmZmZmZmIj48L3BhdGg+Cjwvc3ZnPg==" alt="Said Hassan"></div>' +
+        '<div class="mark-badge"><img src="'+BRAND_MARK_SRC+'" alt="Said Hassan"></div>' +
         '<div><div class="name">ETEC Master<br>Exam Trainer</div></div>' +
       '</div></div>' +
       '<div class="sidebar-ring">' +
@@ -1699,20 +2472,21 @@ function renderShell(){
         '<div class="ring-caption"><div class="t1">Preparation</div><div class="t2">'+overall.attempted+' / '+TOTAL_Q+' answered</div></div>' +
       '</div>' +
       '<nav class="sidebar-nav">' +
-        NAV_ITEMS.map(function(item){
+        navItems().map(function(item){
           return '<button class="nav-item'+(ROUTE===item.id?' active':'')+'" data-nav="'+item.id+'">'+icon(item.icon)+'<span>'+item.label+'</span></button>';
         }).join("") +
       '</nav>' +
-      '<div class="sidebar-foot">' + telemetryFootHtml() + 'Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">Said Hassan — EFL Instructor at IATC Riyadh | © 2026 SH — All Rights Reserved | v3.2</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:mrsaidhassan1@gmail.com" style="color:inherit;text-decoration:underline;">mrsaidhassan1@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
+      '<div class="sidebar-foot">' + accountFootHtml() + telemetryFootHtml() + 'Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">Said Hassan — EFL Instructor at IATC Riyadh | © 2026 SH — All Rights Reserved | v3.2</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:mrsaidhassan1@gmail.com" style="color:inherit;text-decoration:underline;">mrsaidhassan1@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
     '</div>' +
     '<div class="main">' +
       '<div class="topbar">' +
-        '<div><h1>'+ (NAV_ITEMS.find(function(n){return n.id===ROUTE;}) || {label:"ETEC Master Exam Trainer"}).label +'</h1>' +
+        '<div><h1>'+ (navItems().find(function(n){return n.id===ROUTE;}) || {label:"ETEC Master Exam Trainer"}).label +'</h1>' +
         '<div class="crumb">Practice • Review • Master the ETEC Exam</div></div>' +
         '<div class="topbar-spacer"></div>' +
         '<div class="search-box">'+ICONS.search+'<input id="global-search" type="text" placeholder="Search Kolb, ADDIE, Power BI…" value="'+escapeHtml(SEARCH_QUERY||"")+'"/></div>' +
         '<div class="streak-chip">🔥 '+STATE.streak.current+'-day streak</div>' +
       '</div>' +
+      announcementHtml() +
       '<div class="view'+ (["mock-session"].includes(SUBVIEW||"") ? " wide":"") +'" id="view"></div>' +
     '</div>';
 
@@ -1763,8 +2537,11 @@ function renderView(){
     analytics: renderAnalytics,
     rapid: renderRapidReview,
     traps: renderExamTraps,
-    certificate: renderCertificate
+    certificate: renderCertificate,
+    account: renderAccount,
+    admin: renderAdmin
   };
+  if((ROUTE === "account" && !(authEnabled() && signedIn())) || (ROUTE === "admin" && !(authEnabled() && isAdmin()))) ROUTE = "dashboard";
   const fn = renderers[ROUTE] || renderDashboard;
   el.innerHTML = fn();
   if(typeof (window["after_"+ROUTE]) === "function") window["after_"+ROUTE]();
@@ -3010,6 +3787,12 @@ function attachSearchHandlers(){
 
 // ================= Boot =================
 document.addEventListener("DOMContentLoaded", function(){
+  if(authEnabled()){
+    if(!signedIn()){ SESSION = null; saveSession(); renderSignIn(); }
+    else if(!SESSION.user.profile_done) renderProfileForm(true);
+    else startApp();
+    return;
+  }
   telemetryInit();
   render();
 });
