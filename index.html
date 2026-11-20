@@ -176,6 +176,7 @@
   .sidebar-foot button{background:transparent;border:1px solid rgba(255,255,255,0.18);color:var(--sidebar-text);padding:6px 10px;border-radius:7px;font-size:11.5px;cursor:pointer;width:100%;margin-top:8px;}
   .sidebar-foot button:hover{color:#fff;border-color:rgba(255,255,255,0.35);}
 
+  .menu-btn{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;margin-right:10px;border-radius:9px;border:1px solid var(--border-strong,#ccc);background:var(--surface,transparent);color:inherit;font-size:20px;line-height:1;cursor:pointer;}
   .main{flex:1;min-width:0;display:flex;flex-direction:column;}
   .topbar{
     position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);
@@ -374,8 +375,10 @@
   }
   @media (max-width:760px){
     #app{flex-direction:column;}
-    .sidebar{position:relative;width:100%;flex:none;height:auto;}
-    nav.sidebar-nav{flex-direction:row;flex-wrap:wrap;}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;width:min(290px,84vw);flex:none;height:100%;z-index:60;transform:translateX(-105%);transition:transform .22s ease;box-shadow:0 0 30px rgba(0,0,0,.45);}
+    #app.menu-open .sidebar{transform:none;}
+    #app.menu-open::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;}
+    .menu-btn{display:inline-flex !important;}
     .search-box{min-width:0;}
     .view{padding:18px 16px 50px;}
     .qcard{padding:18px 16px;}
@@ -2491,6 +2494,14 @@ function readinessRingSVG(percent, size, stroke, colorVar){
     '</svg>';
 }
 
+document.addEventListener("click", function(e){
+  var app = document.getElementById("app");
+  if(!app) return;
+  if(e.target.closest && e.target.closest("#menu-btn")){ app.classList.toggle("menu-open"); return; }
+  if(app.classList.contains("menu-open") && !(e.target.closest && e.target.closest(".sidebar"))) app.classList.remove("menu-open");
+  else if(e.target.closest && e.target.closest(".sidebar .nav-item")) app.classList.remove("menu-open");
+});
+document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ var a=document.getElementById("app"); if(a) a.classList.remove("menu-open"); } });
 function renderShell(){
   const app = document.getElementById("app");
   const overall = computeOverall();
@@ -2514,6 +2525,7 @@ function renderShell(){
     '</div>' +
     '<div class="main">' +
       '<div class="topbar">' +
+        '<button type="button" class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false">&#9776;</button>' +
         '<div><h1>'+ (navItems().find(function(n){return n.id===ROUTE;}) || {label:"ETEC Master Exam Trainer"}).label +'</h1>' +
         '<div class="crumb">Practice • Review • Master the ETEC Exam</div></div>' +
         '<div class="topbar-spacer"></div>' +
