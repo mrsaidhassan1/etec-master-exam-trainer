@@ -1398,6 +1398,7 @@ function saveState(){
 function resetAllProgress(){
   STATE = defaultState();
   saveState();
+  try{ localStorage.removeItem("etecMasterTrainer_exam_v1"); }catch(e){}
 }
 
 // ================= Utilities =================
@@ -1979,7 +1980,7 @@ function signOut(message){
     }
   }
   T.queue = []; tSave();
-  SESSION = null; saveSession();
+  SESSION = null; saveSession(); examSavedClear();
   SUBVIEW = null; ROUTE = "dashboard";
   if(EXAM && examTimerHandle){ clearInterval(examTimerHandle); }
   renderSignIn(message);
@@ -2584,7 +2585,7 @@ function renderView(){
   el.classList.toggle("wide", SUBVIEW === "mock-session");
   if(SUBVIEW === "search"){ el.innerHTML = renderSearchResults(); attachSearchHandlers(); return; }
   if(SUBVIEW === "study"){ el.innerHTML = renderStudyScreen(); attachStudyHandlers(); return; }
-  if(SUBVIEW === "mock-session"){ el.innerHTML = renderMockSession(); attachMockSessionHandlers(); return; }
+  if(SUBVIEW === "mock-session"){ el.innerHTML = renderMockSession(); attachMockSessionHandlers(); examSave(); return; }
   if(SUBVIEW === "mock-result"){ el.innerHTML = renderMockResult(); attachMockResultHandlers(); return; }
   const renderers = {
     dashboard: renderDashboard,
@@ -3060,6 +3061,51 @@ const MAIN_EXAMS = {
 let EXAM = null;
 let examTimerHandle = null;
 
+// ---- Resume an unfinished Main Exam after a refresh or closed tab ----
+// The exam is saved in this browser on every change. The part clock keeps running while the page is closed
+// (same as the real exam): time away is subtracted when the exam is resumed.
+const EXAM_SAVE_KEY = "etecMasterTrainer_exam_v1";
+function examUid(){ return (SESSION && SESSION.user && SESSION.user.user_id) ? SESSION.user.user_id : ""; }
+function examSave(){
+  if(!EXAM || SUBVIEW !== "mock-session") return;
+  try{ localStorage.setItem(EXAM_SAVE_KEY, JSON.stringify({ uid: examUid(), savedAt: Date.now(), exam: EXAM })); }catch(e){}
+}
+function examSavedClear(){ try{ localStorage.removeItem(EXAM_SAVE_KEY); }catch(e){} }
+function examSavedLoad(){
+  try{
+    const s = JSON.parse(localStorage.getItem(EXAM_SAVE_KEY));
+    if(!s || !s.exam || !Array.isArray(s.exam.parts) || !s.exam.parts.length || s.uid !== examUid()) return null;
+    const ex = s.exam;
+    if(typeof ex.partIndex !== "number" || !ex.parts[ex.partIndex] || !MAIN_EXAMS[ex.examKey]) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function examProjection(s){
+  const parts = s.exam.parts; let idx = s.exam.partIndex, rem = parts[idx].remainingSec, left = (Date.now() - s.savedAt) / 1000;
+  while(left >= rem){
+    left -= rem;
+    if(idx >= parts.length - 1) return { over: true };
+    idx++; rem = parts[idx].remainingSec;
+  }
+  return { over: false, partIdx: idx, remainingSec: Math.max(1, Math.round(rem - left)) };
+}
+function resumeMainExam(){
+  const s = examSavedLoad();
+  if(!s){ toast("No unfinished exam was found."); navigate("mock"); return; }
+  EXAM = s.exam; SUBVIEW = "mock-session"; ROUTE = "mock";
+  let left = (Date.now() - s.savedAt) / 1000, guard = 0;
+  while(left > 0 && guard++ < 10){
+    const p = currentExamPart();
+    if(left >= p.remainingSec){
+      left -= p.remainingSec; p.remainingSec = 0;
+      finishExamPart(true);
+      if(SUBVIEW !== "mock-session") return;
+    } else { p.remainingSec -= left; left = 0; }
+  }
+  activateExamPart(EXAM.partIndex);
+  render();
+}
+
 function examAttemptsFor(examKey){
   return STATE.mockAttempts.filter(function(a){ return (a.examKey || "1") === examKey; });
 }
@@ -3096,11 +3142,52 @@ function renderMockHome(){
         }).join("") + '</tbody></table></div>'
       );
   }).join('<div style="height:8px;"></div>');
-  return '<div class="section-title"><h2>Main Exams</h2></div>' + cards;
+  let resumeCard = "";
+  const saved = examSavedLoad();
+  if(saved){
+    const pj = examProjection(saved);
+    const nm = saved.exam.examTitle || "Main Exam";
+    let line;
+    if(pj.over){ line = "The time for this exam ran out while you were away. Open it to see your result."; }
+    else {
+      const pt = saved.exam.parts[pj.partIdx];
+      const mins = Math.floor(pj.remainingSec/60), secs = pj.remainingSec % 60;
+      line = pt.label + " — about " + mins + " min " + (secs<10?"0":"") + secs + " s left. The clock kept running while you were away, like in the real exam.";
+    }
+    resumeCard = '<div class="card card-pad" style="margin-bottom:18px;border-color:var(--gold-border);background:var(--gold-bg);">' +
+      '<div style="font-family:var(--font-display);font-size:18px;font-weight:600;">Unfinished exam: '+nm+'</div>' +
+      '<div style="font-size:13px;color:var(--ink-muted);margin-top:6px;">'+line+'</div>' +
+      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">' +
+        '<button class="btn btn-primary" id="resume-exam-btn">'+(pj.over?"See my result":"Resume exam")+'</button>' +
+        '<button class="btn btn-ghost" id="discard-exam-btn">Discard it</button>' +
+      '</div></div>';
+  }
+  return '<div class="section-title"><h2>Main Exams</h2></div>' + resumeCard + cards;
 }
 function after_mock(){
   document.querySelectorAll(".start-main-exam-btn").forEach(function(btn){
-    btn.addEventListener("click", function(){ startMainExam(btn.getAttribute("data-exam")); });
+    btn.addEventListener("click", function(){
+      const key = btn.getAttribute("data-exam");
+      const saved = examSavedLoad();
+      if(!saved){ startMainExam(key); return; }
+      openModal({
+        title: "Start a new exam?",
+        body: "You have an unfinished <strong>"+(saved.exam.examTitle||"Main Exam")+"</strong>. Starting a new exam will discard it.",
+        confirmLabel: "Discard and start",
+        onConfirm: function(){ examSavedClear(); startMainExam(key); }
+      });
+    });
+  });
+  const rb = document.getElementById("resume-exam-btn");
+  if(rb) rb.addEventListener("click", resumeMainExam);
+  const db = document.getElementById("discard-exam-btn");
+  if(db) db.addEventListener("click", function(){
+    openModal({
+      title: "Discard the unfinished exam?",
+      body: "Your answers in this attempt will be lost. This cannot be undone.",
+      confirmLabel: "Discard",
+      onConfirm: function(){ examSavedClear(); render(); }
+    });
   });
 }
 
@@ -3281,6 +3368,7 @@ function finishExamPart(auto){
 
 function submitMainExam(){
   clearInterval(examTimerHandle);
+  examSavedClear();
   let correct=0, incorrect=0, unanswered=0, total=0;
   const topicBreakdown = {};
   const partResults = EXAM.parts.map(function(part){
