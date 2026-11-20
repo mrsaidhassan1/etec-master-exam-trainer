@@ -421,6 +421,10 @@
   .pf-field .hint{font-size:11.5px;color:var(--ink-faint);}
   .pf-input{width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:8px;font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit;}
   .pf-input:focus{outline:2px solid var(--navy);outline-offset:1px;}
+  .pf-date{display:flex;gap:8px;}
+  .pf-date .pf-input{flex:1;min-width:0;}
+  .pf-date .pf-input:first-child{flex:0.8;}
+  .pf-date .pf-input:last-child{flex:1.1;}
   textarea.pf-input{resize:vertical;line-height:1.5;}
   .pf-consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55;margin:4px 0 12px;color:var(--ink-muted);}
   .pf-consent input{margin-top:3px;width:16px;height:16px;flex:0 0 auto;}
@@ -1958,6 +1962,31 @@ function signOut(message){
 }
 
 // ---------- Profile & consent ----------
+// Exam date is picked as Day / Month / Year (browser date pickers follow the device language and are ambiguous).
+// It is still stored and sent as YYYY-MM-DD.
+const EXAM_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function examDateSelectsHtml(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  const y = m ? +m[1] : 0, mo = m ? +m[2] : 0, d = m ? +m[3] : 0;
+  let days = '<option value="">Day</option>', months = '<option value="">Month</option>', years = '<option value="">Year</option>';
+  for(let i = 1; i <= 31; i++) days += '<option value="'+i+'"'+(i === d ? " selected" : "")+'>'+i+'</option>';
+  for(let i = 1; i <= 12; i++) months += '<option value="'+i+'"'+(i === mo ? " selected" : "")+'>'+EXAM_MONTHS[i-1]+'</option>';
+  for(let i = 2024; i <= 2030; i++) years += '<option value="'+i+'"'+(i === y ? " selected" : "")+'>'+i+'</option>';
+  return '<div class="pf-date" role="group" aria-label="Planned exam date">' +
+    '<select class="pf-input" id="pf-exam-d" aria-label="Day">'+days+'</select>' +
+    '<select class="pf-input" id="pf-exam-m" aria-label="Month">'+months+'</select>' +
+    '<select class="pf-input" id="pf-exam-y" aria-label="Year">'+years+'</select></div>';
+}
+// Returns "" (none chosen), "YYYY-MM-DD", or null (incomplete or impossible date).
+function readExamDate(){
+  const d = document.getElementById("pf-exam-d").value, m = document.getElementById("pf-exam-m").value, y = document.getElementById("pf-exam-y").value;
+  if(!d && !m && !y) return "";
+  if(!d || !m || !y) return null;
+  const dt = new Date(Date.UTC(+y, +m - 1, +d));
+  if(dt.getUTCFullYear() !== +y || dt.getUTCMonth() !== +m - 1 || dt.getUTCDate() !== +d) return null;
+  return y + "-" + ("0" + m).slice(-2) + "-" + ("0" + d).slice(-2);
+}
+
 function profileFormHtml(user, first){
   const needsConsent = first || !user.profile_done;
   return (
@@ -1968,9 +1997,9 @@ function profileFormHtml(user, first){
         '<input class="pf-input" id="pf-org" type="text" maxlength="80" autocomplete="organization" value="'+escapeHtml(user.organisation||"")+'"></div>' +
       '<div class="pf-field"><label for="pf-city">City</label>' +
         '<input class="pf-input" id="pf-city" type="text" maxlength="60" autocomplete="address-level2" value="'+escapeHtml(user.city||"")+'"></div>' +
-      '<div class="pf-field"><label for="pf-exam">Planned exam date</label>' +
-        '<input class="pf-input" id="pf-exam" type="date" min="2024-01-01" max="2030-12-31" value="'+escapeHtml(user.exam_date||"")+'">' +
-        '<span class="hint">Optional. Leave empty if you haven\'t booked yet.</span></div>' +
+      '<div class="pf-field"><label for="pf-exam-d">Planned exam date (Day / Month / Year)</label>' +
+        examDateSelectsHtml(user.exam_date) +
+        '<span class="hint">Optional. Leave all three empty if you haven\'t booked yet.</span></div>' +
       (needsConsent ?
         '<label class="pf-consent"><input type="checkbox" id="pf-consent">' +
           '<span>I have read the <a href="#" data-action="privacy">privacy notice</a> and agree that my account details and study activity are stored as it describes.' +
@@ -1989,9 +2018,10 @@ function attachProfileForm(first){
     e.preventDefault();
     const msg = document.getElementById("pf-msg");
     const name = document.getElementById("pf-name").value.trim();
-    const exam = document.getElementById("pf-exam").value;
+    const exam = readExamDate();
     const consentBox = document.getElementById("pf-consent");
     const show = function(t, err){ msg.textContent = t; msg.classList.toggle("err", !!err); };
+    if(exam === null){ show(authMessage("bad_exam_date"), true); document.getElementById("pf-exam-d").focus(); return; }
     if(!name){ show(authMessage("name_required"), true); document.getElementById("pf-name").focus(); return; }
     if(consentBox && !consentBox.checked){ show(authMessage("consent_required"), true); consentBox.focus(); return; }
     const btn = document.getElementById("pf-save"); btn.disabled = true; show("Saving…");
@@ -2197,12 +2227,12 @@ function adminError(tab, e){ adminBody(tab, '<div class="empty">'+escapeHtml(e.m
 function fmtWhen(iso){
   if(!iso) return "—";
   const d = new Date(iso); if(isNaN(d)) return "—";
-  return d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric" }) + " " + d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
+  return d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" }) + " " + d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
 }
 function fmtDay(s){
   if(!s) return "—";
   const d = new Date(String(s).slice(0,10) + "T00:00:00Z"); if(isNaN(d)) return escapeHtml(s);
-  return d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric", timeZone:"UTC" });
+  return d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric", timeZone:"UTC" });
 }
 function tableHtml(head, rows, empty){
   if(!rows.length) return '<div class="empty">'+(empty||"Nothing yet.")+'</div>';
