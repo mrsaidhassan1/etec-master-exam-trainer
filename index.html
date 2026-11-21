@@ -2574,7 +2574,7 @@ function drawSignIn(message){
         '<p class="auth-sub">We sent a code to <b>'+escapeHtml(SIGNIN.email)+'</b>. Enter it below. It works for 10 minutes. If you don\'t see the email, check your spam folder.</p>' +
         '<form id="code-form" novalidate>' +
           '<div class="pf-field"><label for="si-code">Sign-in code</label>' +
-            '<input class="pf-input auth-code" id="si-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456" required></div>' +
+            '<input class="pf-input auth-code" id="si-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="40" placeholder="123 456" required></div>' +
           '<button class="btn btn-primary auth-wide" type="submit" id="si-verify">Sign in</button>' +
         '</form>' +
         '<div class="auth-links"><button class="linkbtn" type="button" id="si-resend">Send a new code</button><span aria-hidden="true">·</span>' +
@@ -2597,7 +2597,7 @@ function drawSignIn(message){
     document.getElementById("code-form").addEventListener("submit", submitCode);
     // Keep only digits and show them as "123 456" while typing or pasting.
     document.getElementById("si-code").addEventListener("input", function(){
-      const d = this.value.replace(/\D/g, "").slice(0, 6);
+      const d = codeDigits(this.value).slice(0, 6);
       this.value = d.length > 3 ? d.slice(0, 3) + " " + d.slice(3) : d;
     });
     document.getElementById("si-change").addEventListener("click", function(){ SIGNIN.step = "email"; drawSignIn(); });
@@ -2636,9 +2636,13 @@ function sendCode(email, resend){
   });
 }
 
+// Keeps only the digits of a pasted code: drops spaces and hidden direction marks, and turns Arabic-Indic digits into 0-9.
+function codeDigits(v){
+  return String(v||"").replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-0x660;}).replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-0x6F0;}).replace(/\D/g,"");
+}
 function submitCode(e){
   e.preventDefault();
-  const code = document.getElementById("si-code").value.replace(/\s+/g, "");
+  const code = codeDigits(document.getElementById("si-code").value);
   if(!/^\d{6}$/.test(code)){ setAuthMsg(authMessage("bad_code"), true); return; }
   const btn = document.getElementById("si-verify");
   btn.disabled = true;
