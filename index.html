@@ -2211,7 +2211,7 @@ function after_account(){
   if(del) del.addEventListener("click", function(){
     openModal({
       title: "Delete your account?",
-      body: "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Study progress in this browser is not touched; use Reset Progress in the sidebar to clear it. This cannot be undone.",
+      body: "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Study progress in this browser is not touched. This cannot be undone.",
       confirmLabel: "Delete my account", danger: true,
       onConfirm: function(){
         api("delete_me", { confirm: "DELETE" }).then(function(){ signOut("Your account was deleted."); }).catch(function(e){ toast(e.message); });
@@ -2538,7 +2538,7 @@ function renderShell(){
           return '<button class="nav-item'+(ROUTE===item.id?' active':'')+'" data-nav="'+item.id+'">'+icon(item.icon)+'<span>'+item.label+'</span></button>';
         }).join("") +
       '</nav>' +
-      '<div class="sidebar-foot">' + accountFootHtml() + telemetryFootHtml() + 'Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">© 2026 SH — All Rights Reserved | v3.3</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:etecexammaster@gmail.com" style="color:inherit;text-decoration:underline;">etecexammaster@gmail.com</a></div><button data-action="reset-progress">Reset Progress</button></div>' +
+      '<div class="sidebar-foot">' + accountFootHtml() + telemetryFootHtml() + 'Independent ETEC preparation resource — not an official ETEC platform.<div style="margin-top:6px;opacity:0.85;">© 2026 SH — All Rights Reserved | v3.3</div><div style="margin-top:4px;opacity:0.85;">Feedback or suggestions: <a href="mailto:etecexammaster@gmail.com" style="color:inherit;text-decoration:underline;">etecexammaster@gmail.com</a></div></div>' +
     '</div>' +
     '<div class="main">' +
       '<div class="topbar">' +
@@ -2555,15 +2555,6 @@ function renderShell(){
 
   document.querySelectorAll("[data-nav]").forEach(function(btn){
     btn.addEventListener("click", function(){ SUBVIEW = null; navigate(btn.getAttribute("data-nav")); });
-  });
-  document.querySelector('[data-action="reset-progress"]').addEventListener("click", function(){
-    openModal({
-      title: "Reset all progress?",
-      body: "This permanently deletes your answers, bookmarks, mistakes, mock history, streaks and analytics. This cannot be undone.",
-      confirmLabel: "Reset everything",
-      danger: true,
-      onConfirm: function(){ resetAllProgress(); SUBVIEW=null; navigate("dashboard"); toast("Progress reset."); }
-    });
   });
   const searchInput = document.getElementById("global-search");
   searchInput.addEventListener("input", function(e){
