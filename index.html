@@ -1029,7 +1029,7 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
   ["Professional Knowledge","Professional Practices","Professional Values and Responsibilities","Future Skills"].forEach(function(t){ if(D[t] && !D["["+t+"]"]) D["["+t+"]"] = "[" + D[t] + "]"; });
   if(window.AR_C){ for(var ck in window.AR_C){ if(!Object.prototype.hasOwnProperty.call(D, ck)) D[ck] = window.AR_C[ck]; } }
   var P = [
-    [/^([A-D])\. (.+)$/, function(m){ var t = trs(m[2]); return t === m[2] ? null : m[1] + ". " + t; }],
+    [/^([A-D])\. (.+)$/, function(m){ var t = trs(m[2]); return t === m[2] ? null : { A: "أ", B: "ب", C: "ج", D: "د" }[m[1]] + ". " + t; }],
     [/^→ (.+)$/, function(m){ var t = trs(m[1]); return t === m[1] ? null : "← " + t; }],
     [/^© 2026 SH — All Rights Reserved \| (v[\d.]+)$/, function(m){ return "© 2026 SH — جميع الحقوق محفوظة | " + m[1]; }],
     [/^Send a new code \((\d+)s\)$/, function(m){ return "إرسال رمز جديد (" + m[1] + " ث)"; }],
@@ -1046,7 +1046,7 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     [/^Start Review Today \((\d+)\)$/, function(m){ return "ابدأ مراجعة اليوم (" + m[1] + ")"; }],
     [/^Question (\d+) of (\d+)$/, function(m){ return "السؤال " + m[1] + " من " + m[2]; }],
     [/^(Part \d — .+?) — Question (\d+) of (\d+)$/, function(m){ return T(m[1]) + " — السؤال " + m[2] + " من " + m[3]; }],
-    [/^Part (\d) — (.+)$/, function(m){ return "الجزء " + m[1] + " — " + T(m[2]); }],
+    [/^Part (\d) — (.+)$/, function(m){ var t = T(m[2]); return t === m[2] ? null : "الجزء " + m[1] + " — " + t; }],
     [/^Part (\d) · (upcoming|closed|in progress)$/, function(m){ return "الجزء " + m[1] + " · " + ({ "upcoming": "قادم", "closed": "مغلق", "in progress": "قيد التنفيذ" })[m[2]]; }],
     [/^Time Remaining — Part (\d)$/, function(m){ return "الوقت المتبقي — الجزء " + m[1]; }],
     [/^Finish Part (\d)$/, function(m){ return "إنهاء الجزء " + m[1]; }],
@@ -1084,6 +1084,24 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
 
   // ---------- Translating ----------
   var CACHE = {};
+  // Shortened text (question previews are cut at 90 or 110 characters, with or without "…"): find the full text and cut the Arabic the same way.
+  var PX = null;
+  function prefixTr(core){
+    var t = core.replace(/…$/, "").replace(/\s+$/, "");
+    if(t.length < 40) return null;
+    if(!PX){ PX = {}; for(var k in D){ if(k.length >= 60){ var h = k.slice(0, 40); (PX[h] = PX[h] || []).push(k); } } }
+    var c = PX[t.slice(0, 40)];
+    if(!c) return null;
+    for(var i = 0; i < c.length; i++){
+      if(c[i].indexOf(t) === 0 && c[i].length > t.length){
+        var ar = D[c[i]], n = Math.max(20, Math.round(ar.length * t.length / c[i].length));
+        if(n >= ar.length) return ar;
+        var cut = ar.slice(0, n), sp = cut.lastIndexOf(" ");
+        return (sp > n * 0.6 ? cut.slice(0, sp) : cut) + "…";
+      }
+    }
+    return null;
+  }
   function trs(s){
     if(typeof s !== "string") return s;
     var m = /^(\s*)([\s\S]*?)(\s*)$/.exec(s);
@@ -1098,12 +1116,14 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
         var r = P[i][0].exec(core);
         if(r){ var v = P[i][1](r); if(v !== null && v !== undefined){ out = v; break; } }
       }
+      if(out === null) out = prefixTr(core);
       CACHE[core] = out === null ? false : out;
     } else if(out === false){ out = null; }
     return out === null ? s : m[1] + out + m[3];
   }
   // Public helper used by the app (chart labels etc.): translates in Arabic mode, returns the text unchanged otherwise.
   window.tr = function(s){ return LANG === "ar" ? trs(s) : s; };
+  window.trAr = function(s){ return typeof s === "string" ? trs(s) : s; }; // Arabic form of a text (used by search)
   window.getLang = function(){ return LANG; };
 
   var SKIP = "script,style,textarea,#cert-wrap,[data-no-i18n]";
@@ -1128,6 +1148,7 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     if(LANG !== "ar") return;
     if(skipped(n)) return;
     var out = trs(cur), pe = n.parentElement;
+    if(pe && pe.classList && pe.classList.contains("letter") && /^[A-D]$/.test(cur.trim())) out = { A: "أ", B: "ب", C: "ج", D: "د" }[cur.trim()];
     if(!(pe && pe.closest && pe.closest(".stem,.option .txt,.ct,.rev-card,.flash-face,.trap-side,.pyr-level,.flow-step,.expl-cell"))) out = ad(out); // exam content keeps Western digits
     if(out !== cur){ REC.set(n, { en: cur, out: out }); n.nodeValue = out; }
   }
@@ -4687,17 +4708,20 @@ function after_analytics(){
 function renderSearchResults(){
   const q = (SEARCH_QUERY||"").trim().toLowerCase();
   if(q.length<2) return '<div class="empty">Type at least two characters to search.</div>';
+  // An Arabic query is also matched against the Arabic text (the data itself is English).
+  const arq = /[؀-ۿ]/.test(q) && typeof window.trAr === "function";
+  function hit(s){ s = String(s); return s.toLowerCase().indexOf(q)!==-1 || (arq && window.trAr(s).toLowerCase().indexOf(q)!==-1); }
+  function hay(x){ if(typeof x === "string") return x; if(Array.isArray(x)) return x.map(hay).join(" "); if(x && typeof x === "object") return Object.keys(x).map(function(k){ return hay(x[k]); }).join(" "); return ""; }
+  function hitAny(x){ var parts = []; (function walk(v){ if(typeof v === "string") parts.push(v); else if(Array.isArray(v)) v.forEach(walk); else if(v && typeof v === "object") Object.keys(v).forEach(function(k){ if(k !== "id") walk(v[k]); }); })(x); return parts.some(hit); }
   const qMatches = QUESTIONS.filter(function(item){
-    return item.question.toLowerCase().indexOf(q)!==-1 || item.explanation.toLowerCase().indexOf(q)!==-1 ||
-      item.category.toLowerCase().indexOf(q)!==-1 || item.options.some(function(o){return o.toLowerCase().indexOf(q)!==-1;});
+    return hit(item.question) || hit(item.explanation) || hit(item.category) || item.options.some(hit);
   }).slice(0,15);
   const revMatches = [];
   REVISION_SECTIONS.forEach(function(sec){
-    const hay = (sec.title + " " + JSON.stringify(sec)).toLowerCase();
-    if(hay.indexOf(q)!==-1) revMatches.push(sec);
+    if(hitAny(sec)) revMatches.push(sec);
   });
-  const trapMatches = EXAM_TRAPS.filter(function(t){ return (t.a+t.aBody+t.b+t.bBody).toLowerCase().indexOf(q)!==-1; });
-  const rapidMatches = RAPID_REVIEW.filter(function(r){ return (r.k+r.v).toLowerCase().indexOf(q)!==-1; });
+  const trapMatches = EXAM_TRAPS.filter(function(t){ return hitAny(t); });
+  const rapidMatches = RAPID_REVIEW.filter(function(r){ return hitAny(r); });
 
   let html = '<div class="section-title"><h2>Search results for "'+escapeHtml(SEARCH_QUERY)+'"</h2></div>';
   if(qMatches.length===0 && revMatches.length===0 && trapMatches.length===0 && rapidMatches.length===0){
