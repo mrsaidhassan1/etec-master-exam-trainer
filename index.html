@@ -666,12 +666,12 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "Role": "الدور",
     "Signed in with": "طريقة الدخول",
     "Email code": "رمز عبر البريد",
-    "Your study progress is saved in this browser. Your account details and usage statistics are kept by the trainer's administrator, as the": "يُحفظ تقدّمك الدراسي في هذا المتصفح. أما بيانات حسابك وإحصاءات الاستخدام فيحتفظ بها مسؤول المدرّب، كما هو موضّح في",
+    "Your study progress is saved with your account, so you can continue on any device. Your account details and usage statistics are kept by the trainer's administrator, as the": "يُحفظ تقدّمك الدراسي مع حسابك لتتمكن من المتابعة من أي جهاز. أما بيانات حسابك وإحصاءات الاستخدام فيحتفظ بها مسؤول المدرّب، كما هو موضّح في",
     "describes.": "",
     "Download my data": "تنزيل بياناتي",
     "Delete my account": "حذف حسابي",
     "Delete your account?": "حذف حسابك؟",
-    "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Study progress in this browser is not touched. This cannot be undone.": "سيؤدي هذا إلى إزالة اسمك وبريدك والجهة والمدينة وموعد الاختبار نهائيًا، وفصل سجل استخدامك عنك. لن يتأثر تقدّمك الدراسي في هذا المتصفح. لا يمكن التراجع عن ذلك.",
+    "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Your saved study progress is deleted too. This cannot be undone.": "سيؤدي هذا إلى إزالة اسمك وبريدك والجهة والمدينة وموعد الاختبار نهائيًا، وفصل سجل استخدامك عنك. سيُحذف تقدّمك الدراسي المحفوظ أيضًا. لا يمكن التراجع عن ذلك.",
     "Your data was downloaded.": "تم تنزيل بياناتك.",
     "Profile saved.": "تم حفظ الملف الشخصي.",
     "Your account was deleted.": "تم حذف حسابك.",
@@ -2150,6 +2150,7 @@ function loadState(){
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+  schedulePush();
 }
 
 function resetAllProgress(){
@@ -2157,6 +2158,153 @@ function resetAllProgress(){
   saveState();
   try{ localStorage.removeItem("etecMasterTrainer_exam_v1"); }catch(e){}
 }
+
+// ---------- Study progress saved with the account (added 23 Nov 2026) ----------
+// Progress used to live only in this browser. Now it is also saved on the server under the signed-in account,
+// so signing in on another device (or after clearing the browser) continues where the person stopped.
+// Never uploads before the server copy has been downloaded and merged, so an empty device cannot wipe saved progress.
+const PROGRESS_OWNER_KEY = "etecMasterTrainer_owner_v1";   // user_id that the progress saved in this browser belongs to
+var PROGRESS_SYNC = { ready:false, loading:false, tries:0, timer:null, busy:false, dirty:false, lastJson:"" };
+function progOwner(){ try{ return localStorage.getItem(PROGRESS_OWNER_KEY) || ""; }catch(e){ return ""; } }
+function setProgOwner(id){ try{ if(id) localStorage.setItem(PROGRESS_OWNER_KEY, id); else localStorage.removeItem(PROGRESS_OWNER_KEY); }catch(e){} }
+
+function b64FromBytes(u8){ let t = ""; for(let i = 0; i < u8.length; i += 0x8000) t += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(t); }
+function bytesFromB64(b){ const t = atob(b), u = new Uint8Array(t.length); for(let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return u; }
+function packProgress(obj){
+  const json = JSON.stringify(obj);
+  if(typeof CompressionStream === "undefined") return Promise.resolve("j:" + json);
+  const cs = new CompressionStream("gzip");
+  const w = cs.writable.getWriter(); w.write(new TextEncoder().encode(json)); w.close();
+  return new Response(cs.readable).arrayBuffer().then(function(buf){ return "g:" + b64FromBytes(new Uint8Array(buf)); });
+}
+function unpackProgress(str){
+  if(!str) return Promise.resolve(null);
+  if(str.slice(0, 2) === "j:") return Promise.resolve(JSON.parse(str.slice(2)));
+  if(str.slice(0, 2) === "g:" && typeof DecompressionStream !== "undefined"){
+    const ds = new DecompressionStream("gzip");
+    const w = ds.writable.getWriter(); w.write(bytesFromB64(str.slice(2))); w.close();
+    return new Response(ds.readable).text().then(function(t){ return JSON.parse(t); });
+  }
+  return Promise.reject(new Error("unsupported"));
+}
+
+// Combines the server copy (a) with this browser's copy (b). Nothing answered on either side is lost.
+function mergeProgress(a, b){
+  const d = defaultState();
+  const out = Object.assign({}, d, a, b);
+  const A = a.answers || {}, B = b.answers || {};
+  const ids = {}; Object.keys(A).concat(Object.keys(B)).forEach(function(k){ ids[k] = 1; });
+  out.answers = {}; out.mistakeStatus = {}; out.review = {};
+  Object.keys(ids).forEach(function(k){
+    const x = A[k], y = B[k];
+    let win = "b";
+    if(x && !y) win = "a"; else if(x && y && (Number(x.lastAt) || 0) > (Number(y.lastAt) || 0)) win = "a";
+    const src = win === "a" ? a : b, other = win === "a" ? b : a;
+    const ans = src.answers[k];
+    if(x && y){
+      const seen = {}, all = [];
+      (x.attempts || []).concat(y.attempts || []).forEach(function(t){ const key = JSON.stringify(t); if(!seen[key]){ seen[key] = 1; all.push(t); } });
+      all.sort(function(m, n){ return (m.at || 0) - (n.at || 0); });
+      out.answers[k] = Object.assign({}, ans, { attempts: all });
+    } else out.answers[k] = ans;
+    const ms = (src.mistakeStatus || {})[k] || (other.mistakeStatus || {})[k]; if(ms) out.mistakeStatus[k] = ms;
+    const rv = (src.review || {})[k] || (other.review || {})[k]; if(rv) out.review[k] = rv;
+  });
+  out.bookmarks = {};
+  [a.bookmarks || {}, b.bookmarks || {}].forEach(function(bm){
+    Object.keys(bm).forEach(function(k){
+      out.bookmarks[k] = out.bookmarks[k] || {};
+      Object.keys(bm[k] || {}).forEach(function(f){ if(bm[k][f]) out.bookmarks[k][f] = true; else if(!(f in out.bookmarks[k])) out.bookmarks[k][f] = false; });
+    });
+  });
+  function union(x, y, keyFn, sortFn){
+    const seen = {}, res = [];
+    (x || []).concat(y || []).forEach(function(it){ const key = keyFn(it); if(!seen[key]){ seen[key] = 1; res.push(it); } });
+    if(sortFn) res.sort(sortFn);
+    return res;
+  }
+  out.mockAttempts = union(a.mockAttempts, b.mockAttempts, function(m){ return m && m.id != null ? String(m.id) : JSON.stringify(m); },
+    function(m, n){ return String(m.dateStarted || "").localeCompare(String(n.dateStarted || "")); });
+  out.sessionHistory = union(a.sessionHistory, b.sessionHistory, function(h){ return JSON.stringify(h); });
+  const sa = a.streak || d.streak, sb = b.streak || d.streak;
+  const sWin = String(sa.lastActiveDate || "") > String(sb.lastActiveDate || "") ? sa : (String(sb.lastActiveDate || "") > String(sa.lastActiveDate || "") ? sb : ((sa.current || 0) >= (sb.current || 0) ? sa : sb));
+  out.streak = { lastActiveDate: sWin.lastActiveDate || null, current: sWin.current || 0, best: Math.max(sa.best || 0, sb.best || 0, sWin.current || 0) };
+  const da = a.daily || d.daily, db = b.daily || d.daily;
+  const dWin = String(da.lastDate || "") >= String(db.lastDate || "") ? da : db;
+  out.daily = { lastDate: dWin.lastDate || null, streak: dWin.streak || 0, best: Math.max(da.best || 0, db.best || 0, dWin.streak || 0),
+    history: union(da.history, db.history, function(h){ return JSON.stringify(h); }) };
+  out.bestMockScore = (a.bestMockScore == null) ? (b.bestMockScore == null ? null : b.bestMockScore) : (b.bestMockScore == null ? a.bestMockScore : Math.max(a.bestMockScore, b.bestMockScore));
+  // Learn: keep the side that got further, together with its question order.
+  const la = a.learnOrder ? (a.learnIndex || 0) : -1, lb = b.learnOrder ? (b.learnIndex || 0) : -1;
+  const lw = lb >= la ? b : a;
+  out.learnOrder = lw.learnOrder || null; out.learnIndex = lw.learnOrder ? (lw.learnIndex || 0) : 0;
+  const lc = [a.learnCompletedAt, b.learnCompletedAt].filter(Boolean).sort();
+  out.learnCompletedAt = lc.length ? lc[0] : null;
+  out.certificate = b.certificate || a.certificate || null;
+  out.lastSessionScore = b.lastSessionScore != null ? b.lastSessionScore : (a.lastSessionScore != null ? a.lastSessionScore : null);
+  return out;
+}
+
+function progressSyncStart(){
+  if(!authEnabled() || !signedIn() || PROGRESS_SYNC.ready || PROGRESS_SYNC.loading) return;
+  const uid = SESSION.user.user_id;
+  PROGRESS_SYNC.loading = true;
+  api("progress_get").then(function(res){
+    return unpackProgress(res.data);
+  }).then(function(server){
+    if(!signedIn() || SESSION.user.user_id !== uid) return;
+    const owner = progOwner();
+    const mine = !owner || owner === uid;       // progress in this browser is this person's (or from before accounts existed)
+    const before = JSON.stringify(STATE);
+    let next;
+    if(server && mine) next = mergeProgress(Object.assign(defaultState(), server), STATE);
+    else if(server) next = Object.assign(defaultState(), server);
+    else if(mine) next = STATE;
+    else next = defaultState();
+    STATE = next;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+    setProgOwner(uid);
+    PROGRESS_SYNC.ready = true; PROGRESS_SYNC.loading = false; PROGRESS_SYNC.tries = 0;
+    PROGRESS_SYNC.lastJson = server ? JSON.stringify(Object.assign(defaultState(), server)) : "";
+    if(JSON.stringify(STATE) !== PROGRESS_SYNC.lastJson) schedulePush(1500);
+    const busy = SUBVIEW === "study" || SUBVIEW === "mock-session" || (typeof EXAM !== "undefined" && EXAM);
+    if(!busy && JSON.stringify(STATE) !== before) render();
+  }).catch(function(){
+    PROGRESS_SYNC.loading = false;
+    if(PROGRESS_SYNC.tries++ < 5) setTimeout(progressSyncStart, 20000);
+  });
+}
+
+function schedulePush(delay){
+  if(!PROGRESS_SYNC || !PROGRESS_SYNC.ready) return;
+  PROGRESS_SYNC.dirty = true;
+  clearTimeout(PROGRESS_SYNC.timer);
+  PROGRESS_SYNC.timer = setTimeout(function(){ pushProgress(false); }, delay || 4000);
+}
+
+// flush = true when the page is being hidden or the person is signing out (sent with keepalive so it survives).
+function pushProgress(flush){
+  if(!PROGRESS_SYNC.ready || !SESSION) return Promise.resolve();
+  if(PROGRESS_SYNC.busy && !flush){ PROGRESS_SYNC.dirty = true; return Promise.resolve(); }
+  const json = JSON.stringify(STATE);
+  if(json === PROGRESS_SYNC.lastJson){ PROGRESS_SYNC.dirty = false; return Promise.resolve(); }
+  const token = SESSION.token;
+  PROGRESS_SYNC.busy = true; PROGRESS_SYNC.dirty = false;
+  return packProgress(STATE).then(function(data){
+    const body = JSON.stringify({ action: "progress_put", session: token, data: data });
+    if(flush && body.length < 60000){
+      fetch(TELEMETRY.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: body }).catch(function(){});
+      PROGRESS_SYNC.lastJson = json;
+      return;
+    }
+    return api("progress_put", { data: data }).then(function(){ PROGRESS_SYNC.lastJson = json; });
+  }).catch(function(){ PROGRESS_SYNC.dirty = true; }).then(function(){
+    PROGRESS_SYNC.busy = false;
+    if(PROGRESS_SYNC.dirty && PROGRESS_SYNC.ready){ clearTimeout(PROGRESS_SYNC.timer); PROGRESS_SYNC.timer = setTimeout(function(){ pushProgress(false); }, 15000); }
+  });
+}
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "hidden" && PROGRESS_SYNC.ready && PROGRESS_SYNC.dirty) pushProgress(true); });
+window.addEventListener("pagehide", function(){ if(PROGRESS_SYNC.ready && PROGRESS_SYNC.dirty) pushProgress(true); });
 
 // ================= Utilities =================
 function shuffle(arr){
@@ -2439,7 +2587,7 @@ function telemetryInit(){
     openModal({
       title: authEnabled() ? "Usage statistics" : "Anonymous usage statistics",
       body: "These are " + (on ? "currently <b>on</b>" : "currently <b>off</b>") + ". " + (authEnabled()
-        ? "When on, the sections you use, topic-level scores, Main Exam results and time spent are linked to your account so the administrator can follow your preparation. Question text and the option you picked are never sent. Your study progress stays in this browser either way."
+        ? "When on, the sections you use, topic-level scores, Main Exam results and time spent are linked to your account so the administrator can follow your preparation. Question text and the option you picked are never sent. Your study progress is saved with your account either way."
         : "When on, this browser sends a random ID plus which sections you use, topic-level scores, mock exam results and time spent. No name, email or answer content is sent. Your study progress stays in this browser either way."),
       confirmLabel: on ? "Turn off" : "Turn on",
       danger: on,
@@ -2724,6 +2872,7 @@ function submitCode(e){
 function completeSignIn(res){
   SESSION = { token: res.session, expires: res.expires, user: res.user };
   saveSession();
+  if(progOwner() && progOwner() !== res.user.user_id){ STATE = defaultState(); try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); localStorage.removeItem("etecMasterTrainer_exam_v1"); }catch(e){} }
   ANNOUNCEMENT = res.announcement || null;
   AUTH_UI.resetSeen = AUTH_UI.resetSeen || {};
   if(!(res.user.user_id in AUTH_UI.resetSeen)){ AUTH_UI.resetSeen[res.user.user_id] = res.user.reset_at || ""; saveAuthUi(); }
@@ -2742,6 +2891,8 @@ function signOut(message){
     }
   }
   T.queue = []; tSave();
+  try{ pushProgress(true); }catch(e){}
+  clearTimeout(PROGRESS_SYNC.timer); PROGRESS_SYNC.ready = false; PROGRESS_SYNC.loading = false; PROGRESS_SYNC.tries = 0; PROGRESS_SYNC.lastJson = "";
   SESSION = null; saveSession(); examSavedClear();
   SUBVIEW = null; ROUTE = "dashboard";
   if(EXAM && examTimerHandle){ clearInterval(examTimerHandle); }
@@ -2850,6 +3001,7 @@ function startApp(){
   }
   render();
   refreshMe();
+  progressSyncStart();
 }
 
 function refreshMe(){
@@ -2906,7 +3058,7 @@ const PRIVACY_HTML =
     '<p><b>Who can see it:</b> only the trainer\'s administrator (Said Hassan). It is stored in a private Google Sheet on Google\'s servers, which may be outside Saudi Arabia. It is never sold or shared.</p>' +
     '<p><b>How long it is kept:</b> until you delete your account, or 12 months after your planned exam date, whichever comes first.</p>' +
     '<p><b>Your rights:</b> you can view and edit your profile, download your data and delete your account at any time from My Account. For anything else, use the feedback email in the sidebar.</p>' +
-    '<p>Your study progress (answers, bookmarks, exam history) is saved in this browser only.</p>' +
+    '<p>Your study progress (answers, bookmarks, exam history, Learn position) is saved with your account, in the same private Google Sheet, so you can continue on any device. It is removed when you delete your account.</p>' +
     '<hr>' +
     '<div lang="ar" dir="rtl">' +
       '<p><b>إشعار الخصوصية</b> (الإصدار ' + AUTH.CONSENT_VERSION + ')</p>' +
@@ -2915,7 +3067,7 @@ const PRIVACY_HTML =
       '<p><b>من يطّلع عليها:</b> مسؤول المدرّب فقط (Said Hassan). تُحفظ في جدول Google خاص على خوادم Google، وقد تكون خارج المملكة العربية السعودية. لا تُباع ولا تُشارك مع أي طرف.</p>' +
       '<p><b>مدة الاحتفاظ:</b> حتى تحذف حسابك، أو 12 شهرًا بعد موعد اختبارك المتوقع، أيهما أسبق.</p>' +
       '<p><b>حقوقك:</b> يمكنك عرض ملفك وتعديله وتنزيل بياناتك وحذف حسابك في أي وقت من صفحة «حسابي» (My Account). ولأي استفسار آخر استخدم بريد الملاحظات الظاهر في القائمة الجانبية.</p>' +
-      '<p>يُحفظ تقدّمك الدراسي (الإجابات والإشارات المرجعية وسجل الاختبارات) في هذا المتصفح فقط.</p>' +
+      '<p>يُحفظ تقدّمك الدراسي (الإجابات والإشارات المرجعية وسجل الاختبارات وموضعك في قسم التعلّم) مع حسابك، في جدول Google الخاص نفسه، لتتمكن من المتابعة من أي جهاز. ويُحذف عند حذف حسابك.</p>' +
     '</div>' +
   '</div>';
 
@@ -2950,7 +3102,7 @@ function renderAccount(){
         '<div class="acct-row"><span>Email</span><b>'+escapeHtml(u.email)+'</b></div>' +
         '<div class="acct-row"><span>Role</span><span class="pill '+(u.role==="admin"?"pill-gold":"pill-navy")+'">'+(u.role==="admin"?"Admin":"User")+'</span></div>' +
         '<div class="acct-row"><span>Signed in with</span><b>Email code</b></div>' +
-        '<p class="acct-note">Your study progress is saved in this browser. Your account details and usage statistics are kept by the trainer\'s administrator, as the <a href="#" data-action="privacy">privacy notice</a> describes.</p>' +
+        '<p class="acct-note">Your study progress is saved with your account, so you can continue on any device. Your account details and usage statistics are kept by the trainer\'s administrator, as the <a href="#" data-action="privacy">privacy notice</a> describes.</p>' +
         '<div class="acct-actions">' +
           '<button class="btn btn-ghost" type="button" id="acct-export">Download my data</button>' +
           '<button class="btn btn-ghost" type="button" data-action="sign-out">Sign out</button>' +
@@ -2974,10 +3126,10 @@ function after_account(){
   if(del) del.addEventListener("click", function(){
     openModal({
       title: "Delete your account?",
-      body: "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Study progress in this browser is not touched. This cannot be undone.",
+      body: "This permanently removes your name, email, organisation, city and exam date, and unlinks your usage history from you. Your saved study progress is deleted too. This cannot be undone.",
       confirmLabel: "Delete my account", danger: true,
       onConfirm: function(){
-        api("delete_me", { confirm: "DELETE" }).then(function(){ signOut("Your account was deleted."); }).catch(function(e){ toast(e.message); });
+        api("delete_me", { confirm: "DELETE" }).then(function(){ PROGRESS_SYNC.ready = false; resetAllProgress(); setProgOwner(""); signOut("Your account was deleted."); }).catch(function(e){ toast(e.message); });
       }
     });
   });
