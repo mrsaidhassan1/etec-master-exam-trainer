@@ -737,6 +737,7 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "I have a suggestion": "لدي اقتراح",
     "Something else": "شيء آخر",
     "This trainer is for ARX and IATC trainees. Enter ARX or IATC (or your full organisation name) as your organisation, or sign in with your IATC email address.": "هذا المدرّب مخصص لمتدربي ARX وIATC. اكتب ARX أو IATC (أو الاسم الكامل لجهتك) في خانة الجهة، أو سجّل الدخول ببريدك الإلكتروني في IATC.",
+    "Profile incomplete": "الملف غير مكتمل",
     "Cancel": "إلغاء",
     "Confirm": "تأكيد",
 
@@ -3267,7 +3268,8 @@ function adminUsers(){
   const draw = function(){
     const q = ADMIN_FILTER.q.trim().toLowerCase();
     const list = (ADMIN_USERS || []).filter(function(u){
-      if(ADMIN_FILTER.status !== "all" && u.status !== ADMIN_FILTER.status) return false;
+      if(ADMIN_FILTER.status === "incomplete"){ if(!(u.status === "active" && u.role !== "admin" && !u.profile_done)) return false; }
+      else if(ADMIN_FILTER.status !== "all" && u.status !== ADMIN_FILTER.status) return false;
       if(!q) return true;
       return [u.name, u.email, u.organisation, u.city].join(" ").toLowerCase().indexOf(q) !== -1;
     });
@@ -3277,11 +3279,12 @@ function adminUsers(){
         u.status === "suspended" ? ["reactivate", "delete"] : ["restore"];
       const statusPill = u.status === "active" ? '<span class="pill pill-good">Active</span>' :
         u.status === "suspended" ? '<span class="pill pill-bad">Suspended</span>' : '<span class="pill pill-muted">Deleted</span>';
+      const incomplete = u.status === "active" && u.role !== "admin" && !u.profile_done;   // signed in with a code but never saved a profile
       return '<tr>' +
         '<td><div>'+escapeHtml(u.name || "—")+(u.role==="admin"?' <span class="pill pill-gold">Admin</span>':'')+'</div><div class="sub">'+escapeHtml(u.email)+'</div></td>' +
         '<td>'+escapeHtml(u.organisation || "—")+'<div class="sub">'+escapeHtml(u.city || "")+'</div></td>' +
         '<td>'+fmtDay(u.exam_date)+'</td>' +
-        '<td>'+statusPill+(u.status==="deleted"&&u.deleted_at?'<div class="sub">'+fmtDay(u.deleted_at)+'</div>':'')+'</td>' +
+        '<td>'+statusPill+(incomplete?'<div class="sub"><span class="pill pill-gold">Profile incomplete</span></div>':'')+(u.status==="deleted"&&u.deleted_at?'<div class="sub">'+fmtDay(u.deleted_at)+'</div>':'')+'</td>' +
         '<td>'+fmtWhen(u.last_active || u.last_login)+'</td>' +
         '<td class="num">'+u.answers+'</td>' +
         '<td class="num">'+(u.accuracy===null?'—':u.accuracy+'%')+'</td>' +
@@ -3295,7 +3298,7 @@ function adminUsers(){
       '<div class="admin-toolbar">' +
         '<input class="pf-input admin-search" id="admin-q" type="search" placeholder="Search name, email, organisation or city" aria-label="Search users" value="'+escapeHtml(ADMIN_FILTER.q)+'">' +
         '<select class="pf-input admin-select" id="admin-status" aria-label="Filter by status">' +
-          [["all","All statuses"],["active","Active"],["suspended","Suspended"],["deleted","Deleted"]].map(function(o){
+          [["all","All statuses"],["active","Active"],["suspended","Suspended"],["deleted","Deleted"],["incomplete","Profile incomplete"]].map(function(o){
             return '<option value="'+o[0]+'"'+(ADMIN_FILTER.status===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join("") +
         '</select>' +
         '<span class="admin-note">'+list.length+' of '+(ADMIN_USERS||[]).length+' users</span>' +
