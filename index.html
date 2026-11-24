@@ -738,6 +738,8 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "Something else": "شيء آخر",
     "This trainer is for ARX and IATC trainees. Enter ARX or IATC (or your full organisation name) as your organisation, or sign in with your IATC email address.": "هذا المدرّب مخصص لمتدربي ARX وIATC. اكتب ARX أو IATC (أو الاسم الكامل لجهتك) في خانة الجهة، أو سجّل الدخول ببريدك الإلكتروني في IATC.",
     "Profile incomplete": "الملف غير مكتمل",
+    "Enter your real first and last name.": "اكتب اسمك الأول واسم العائلة الحقيقيين.",
+    "First and last name": "الاسم الأول واسم العائلة",
     "Cancel": "إلغاء",
     "Confirm": "تأكيد",
 
@@ -2753,6 +2755,7 @@ const AUTH_MESSAGES = {
   rate_limited: "Too many attempts. Wait a few minutes and try again.",
   org_not_allowed: "This trainer is for ARX and IATC trainees. Enter ARX or IATC (or your full organisation name) as your organisation, or sign in with your IATC email address.",
   name_required: "Enter your name.",
+  full_name_required: "Enter your real first and last name.",
   bad_exam_date: "Enter a valid exam date.",
   consent_required: "Tick the box to accept the privacy notice.",
   forbidden: "You don't have permission to do that.",
@@ -2962,7 +2965,7 @@ function profileFormHtml(user, first){
   return (
     '<form id="profile-form" novalidate>' +
       '<div class="pf-field"><label for="pf-name">Full name</label>' +
-        '<input class="pf-input" id="pf-name" type="text" maxlength="60" autocomplete="name" required value="'+escapeHtml(user.name||"")+'"></div>' +
+        '<input class="pf-input" id="pf-name" type="text" maxlength="60" autocomplete="name" placeholder="First and last name" required value="'+escapeHtml(user.name||"")+'"></div>' +
       '<div class="pf-field"><label for="pf-org">Organisation or training centre</label>' +
         '<input class="pf-input" id="pf-org" type="text" maxlength="80" autocomplete="organization" value="'+escapeHtml(user.organisation||"")+'"></div>' +
       '<div class="pf-field"><label for="pf-city">City</label>' +
@@ -2993,6 +2996,7 @@ function attachProfileForm(first){
     const show = function(t, err){ msg.textContent = t; msg.classList.toggle("err", !!err); };
     if(exam === null){ show(authMessage("bad_exam_date"), true); document.getElementById("pf-exam-d").focus(); return; }
     if(!name){ show(authMessage("name_required"), true); document.getElementById("pf-name").focus(); return; }
+    if(name.split(/\s+/).filter(function(w){ return w.length >= 2; }).length < 2 && (first || name !== (SESSION.user.name || ""))){ show(authMessage("full_name_required"), true); document.getElementById("pf-name").focus(); return; }
     if(consentBox && !consentBox.checked){ show(authMessage("consent_required"), true); consentBox.focus(); return; }
     const btn = document.getElementById("pf-save"); btn.disabled = true; show("Saving…");
     api("profile", {
