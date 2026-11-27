@@ -561,6 +561,42 @@
   .np-dom{font-size:15px;margin:16px 0 4px;color:var(--ink);}
   .np-std{font-size:12.5px;font-weight:600;color:var(--ink-muted);margin:8px 0 6px;}
   .np-group{margin:6px 2px 0;}
+  .ch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:14px 0;}
+  .ch-card{min-width:0;}
+  .ch-wide{grid-column:1/-1;}
+  .ch-cols{display:flex;align-items:flex-end;gap:2px;height:110px;border-bottom:1px solid var(--border-strong);}
+  .ch-col{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0;}
+  .ch-col span{display:block;width:100%;background:var(--gold);border-radius:4px 4px 0 0;}
+  .ch-col:hover,.ch-col:focus{background:var(--surface-2);}
+  .ch-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-faint);margin-top:4px;}
+  .ch-bars{display:flex;flex-direction:column;gap:7px;}
+  .ch-row{display:grid;grid-template-columns:minmax(90px,34%) 1fr auto;gap:8px;align-items:center;font-size:12.5px;}
+  .ch-label{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ch-track{display:block;height:10px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+  .ch-fill{display:block;height:100%;background:var(--gold);border-radius:4px;}
+  .ch-fill.ch-low{background:var(--bad);}
+  .ch-val{color:var(--ink-muted);font-size:11.5px;white-space:nowrap;}
+  .ch-legend{display:flex;gap:14px;font-size:12px;color:var(--ink-muted);margin-bottom:10px;flex-wrap:wrap;}
+  .ch-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-inline-end:5px;vertical-align:-1px;}
+  .ch-ok{background:var(--good);}
+  .ch-no{background:var(--bad);}
+  .ch-none{background:var(--border-strong);}
+  .ch-cov{display:flex;flex-direction:column;gap:10px;}
+  .ch-covhead{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--ink);margin-bottom:4px;flex-wrap:wrap;}
+  .ch-stack{display:flex;gap:2px;height:12px;border-radius:4px;overflow:hidden;}
+  .ch-stack span{display:block;min-width:2px;}
+  .ud-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .ud-name{font-size:20px;margin:0;}
+  .ud-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .ud-map{display:flex;flex-wrap:wrap;gap:2px;}
+  .ud-map i{width:12px;height:12px;border-radius:2px;}
+  .ud-det{margin-top:12px;}
+  .ud-det summary{cursor:pointer;font-size:13px;font-weight:600;}
+  .ud-scroll{max-height:380px;overflow:auto;margin-top:8px;}
+  .ch-name,.ch-th{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:inherit;}
+  .ch-name:hover{text-decoration:underline;}
+  .ch-th{text-transform:inherit;letter-spacing:inherit;font-weight:inherit;border-bottom:1px dotted var(--ink-faint);}
+  .ch-th.on{color:var(--gold);}
 </style>
 </head>
 <body>
@@ -622,7 +658,7 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "Certificate": "الشهادة",
     "My Account": "حسابي",
     "Admin": "مسؤول",
-    "User": "مستخدم",
+    "User": "المستخدم",
     "Open menu": "فتح القائمة",
     "Independent ETEC preparation resource — not an official ETEC platform.": "مصدر مستقل للتحضير لاختبار ETEC، وليس منصة رسمية لـ ETEC.",
     "Independent ETEC preparation resource, not an official ETEC platform.": "مصدر مستقل للتحضير لاختبار ETEC، وليس منصة رسمية لـ ETEC.",
@@ -743,6 +779,50 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "Profile incomplete": "الملف غير مكتمل",
     "Enter your real first and last name.": "اكتب اسمك الأول واسم العائلة الحقيقيين.",
     "First and last name": "الاسم الأول واسم العائلة",
+    // Admin screens
+    "Users": "المستخدمون",
+    "Organisation": "الجهة",
+    "Joined": "تاريخ الانضمام",
+    "Exam date": "موعد الاختبار",
+    "Status": "الحالة",
+    "Last active": "آخر نشاط",
+    "Answers": "الإجابات",
+    "Accuracy": "الدقة",
+    "Best exam": "أفضل اختبار",
+    "Actions": "الإجراءات",
+    "View": "عرض",
+    "Delete permanently": "حذف نهائي",
+    "Newest joined": "الأحدث انضمامًا",
+    "Oldest joined": "الأقدم انضمامًا",
+    "Name A to Z": "الاسم من أ إلى ي",
+    "Name Z to A": "الاسم من ي إلى أ",
+    "Recently active": "الأحدث نشاطًا",
+    "Most answers": "الأكثر إجابة",
+    "Highest accuracy": "الأعلى دقة",
+    "Exam date, soonest first": "موعد الاختبار الأقرب أولًا",
+    "Back to all users": "العودة إلى جميع المستخدمين",
+    "Study progress": "التقدم الدراسي",
+    "Coverage by domain": "التغطية حسب المجال",
+    "Coverage by topic": "التغطية حسب الموضوع",
+    "Question by question": "سؤالًا بسؤال",
+    "Main Exam results": "نتائج الاختبارات الرئيسية",
+    "Activity": "النشاط",
+    "Not tried": "لم يُحاوَل",
+    "Wrong": "خطأ",
+    "Delete this user permanently?": "حذف هذا المستخدم نهائيًا؟",
+    "Type DELETE to confirm:": "اكتب DELETE للتأكيد:",
+    "Questions answered per day": "الأسئلة المجابة يوميًا",
+    "Time of day": "وقت اليوم",
+    "Sections opened": "الأقسام المفتوحة",
+    "Accuracy by study mode": "الدقة حسب نمط الدراسة",
+    "Main Exam score by domain": "درجة الاختبار الرئيسي حسب المجال",
+    "Weakest topics": "أضعف الموضوعات",
+    "Devices": "الأجهزة",
+    "From sign-in to Main Exam": "من تسجيل الدخول إلى الاختبار الرئيسي",
+    "People active per day": "المستخدمون النشطون يوميًا",
+    "New sign-ups per day": "المسجلون الجدد يوميًا",
+    "By organisation": "حسب الجهة",
+    "By city": "حسب المدينة",
     "Cancel": "إلغاء",
     "Confirm": "تأكيد",
 
@@ -752,7 +832,7 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "Low": "منخفضة", "Exam Ready": "جاهز للاختبار", "Very Good": "جيد جدًا", "Good": "جيد", "Developing": "في تطوّر",
     "Total Questions": "إجمالي الأسئلة",
     "Attempted": "تمت محاولتها",
-    "Correct": "صحيحة",
+    "Correct": "صحيح",
     "Incorrect": "خاطئة",
     "Unanswered": "بلا إجابة",
     "Time Taken": "الزمن المستغرق",
@@ -3104,7 +3184,7 @@ function announcementHtml(){
 const PRIVACY_HTML =
   '<div class="privacy">' +
     '<p><b>Privacy notice</b> (version ' + AUTH.CONSENT_VERSION + ')</p>' +
-    '<p><b>What is collected:</b> your name and email address, and an account ID derived from your email address; the organisation, city and planned exam date you enter; and how you use the trainer (sections opened, results by topic, Main Exam scores and time spent). The question text and the option you picked are never collected.</p>' +
+    '<p><b>What is collected:</b> your name and email address, and an account ID derived from your email address; the organisation, city and planned exam date you enter; and how you use the trainer (sections opened, results by topic, Main Exam scores and time spent). Your study progress (the questions you tried, whether each answer was right, the option you picked, and your Main Exam results) is saved with your account. The administrator can see which questions you tried, whether they were right, and your results and study activity.</p>' +
     '<p><b>Why:</b> to run your account (including emailing you sign-in codes), understand how the trainer is used, and improve it.</p>' +
     '<p><b>Who can see it:</b> only the trainer\'s administrator (Said Hassan). It is stored in a private Google Sheet on Google\'s servers, which may be outside Saudi Arabia. It is never sold or shared.</p>' +
     '<p><b>How long it is kept:</b> until you delete your account, or 12 months after your planned exam date, whichever comes first.</p>' +
@@ -3113,7 +3193,7 @@ const PRIVACY_HTML =
     '<hr>' +
     '<div lang="ar" dir="rtl">' +
       '<p><b>إشعار الخصوصية</b> (الإصدار ' + AUTH.CONSENT_VERSION + ')</p>' +
-      '<p><b>ما نجمعه:</b> اسمك وبريدك الإلكتروني ومعرّف حساب مشتق من بريدك، والجهة والمدينة وموعد الاختبار المتوقع التي تُدخلها، وطريقة استخدامك للمدرّب (الأقسام التي تفتحها، ونتائجك حسب الموضوع، ودرجات الاختبارات الرئيسية، والوقت المستغرق). لا نجمع أبدًا نص الأسئلة ولا الخيار الذي اخترته.</p>' +
+      '<p><b>ما نجمعه:</b> اسمك وبريدك الإلكتروني ومعرّف حساب مشتق من بريدك، والجهة والمدينة وموعد الاختبار المتوقع التي تُدخلها، وطريقة استخدامك للمدرّب (الأقسام التي تفتحها، ونتائجك حسب الموضوع، ودرجات الاختبارات الرئيسية، والوقت المستغرق). ويُحفظ تقدّمك الدراسي (الأسئلة التي حاولت الإجابة عنها، وهل كانت كل إجابة صحيحة، والخيار الذي اخترته، ونتائجك في الاختبارات الرئيسية) مع حسابك. ويستطيع مسؤول المدرّب الاطلاع على الأسئلة التي حاولتها وهل كانت إجاباتها صحيحة، وعلى نتائجك ونشاطك الدراسي.</p>' +
       '<p><b>لماذا:</b> لتشغيل حسابك (ومنه إرسال رموز الدخول إلى بريدك)، وفهم طريقة استخدام المدرّب، وتحسينه.</p>' +
       '<p><b>من يطّلع عليها:</b> مسؤول المدرّب فقط (Said Hassan). تُحفظ في جدول Google خاص على خوادم Google، وقد تكون خارج المملكة العربية السعودية. لا تُباع ولا تُشارك مع أي طرف.</p>' +
       '<p><b>مدة الاحتفاظ:</b> حتى تحذف حسابك، أو 12 شهرًا بعد موعد اختبارك المتوقع، أيهما أسبق.</p>' +
@@ -3189,7 +3269,7 @@ function after_account(){
 // ---------- Admin ----------
 let ADMIN_TAB = "overview";
 let ADMIN_USERS = null;
-let ADMIN_FILTER = { q: "", status: "all" };
+let ADMIN_FILTER = { q: "", status: "all", sort: "joined_new" };
 const ADMIN_TABS = [
   { id: "overview", label: "Overview" },
   { id: "users", label: "Users" },
@@ -3235,9 +3315,58 @@ function tableHtml(head, rows, empty){
 function after_admin(){
   if(!isAdmin()){ navigate("dashboard"); return; }
   document.querySelectorAll("[data-admin-tab]").forEach(function(b){
-    b.addEventListener("click", function(){ ADMIN_TAB = b.getAttribute("data-admin-tab"); renderView(); });
+    b.addEventListener("click", function(){ ADMIN_TAB = b.getAttribute("data-admin-tab"); ADMIN_USER_ID = null; renderView(); });
   });
   ({ overview: adminOverview, users: adminUsers, announce: adminAnnounce, audit: adminAudit, export: adminExport }[ADMIN_TAB] || adminOverview)();
+}
+
+// ---------- Admin charts (plain HTML bars; each chart has a tooltip on every mark and a table or figures beside it) ----------
+const SECTION_NAMES = { dashboard:"Dashboard", about:"About the Exam", study:"Study Here", learn:"Learn", practice:"Practice", mock:"Main Exams", mocks:"Main Exams",
+  certificate:"Certificate", weak:"Weak Areas", mistakes:"Mistakes", flashcards:"Flashcards", revision:"Revision", traps:"Exam Traps", rapid:"10-Minute Review",
+  review:"Review", bookmarks:"Bookmarks", analytics:"Analytics", account:"My Account", admin:"Admin" };
+const MODE_NAMES = { learn:"Learn", practice:"Practice", mock:"Main Exam", retry:"Retry", daily:"Daily quiz", weak:"Weak areas", review:"Review", study:"Study", other:"Other" };
+function niceName(map, k){ return map[k] || String(k || "Other").replace(/[-_]/g, " ").replace(/^./, function(c){ return c.toUpperCase(); }); }
+function shortDay(d){ const x = new Date(d + "T00:00:00Z"); return isNaN(x) ? d : x.toLocaleDateString("en-GB", { day:"numeric", month:"short", timeZone:"UTC" }); }
+function chartCard(title, note, body, wide){
+  return '<div class="card card-pad ch-card'+(wide?' ch-wide':'')+'"><h3 class="admin-h">'+title+'</h3>'+(note?'<p class="admin-note">'+note+'</p>':'')+body+'</div>';
+}
+// Columns over time or hours. items: [{label, value, tip}]
+function colChart(items){
+  const max = Math.max.apply(null, items.map(function(i){ return i.value; }).concat([0]));
+  if(!max) return '<div class="empty">No activity yet.</div>';
+  return '<div class="ch-cols" dir="ltr">' + items.map(function(i){
+      return '<div class="ch-col" tabindex="0" title="'+escapeHtml(i.tip)+'" aria-label="'+escapeHtml(i.tip)+'"><span style="height:'+(i.value ? Math.max(3, Math.round(100*i.value/max)) : 0)+'%"></span></div>';
+    }).join("") + '</div>' +
+    '<div class="ch-axis" dir="ltr"><span>'+escapeHtml(items[0].label)+'</span><span>highest: '+max+'</span><span>'+escapeHtml(items[items.length-1].label)+'</span></div>';
+}
+// Horizontal bars with the value written beside each. rows: [{label, value, max, text, tone}]
+function barList(rows, empty){
+  if(!rows.length) return '<div class="empty">'+(empty || "Nothing yet.")+'</div>';
+  const top = Math.max.apply(null, rows.map(function(r){ return r.max || r.value; }).concat([1]));
+  return '<div class="ch-bars">' + rows.map(function(r){
+    const w = Math.round(100 * r.value / (r.max || top));
+    return '<div class="ch-row" title="'+escapeHtml(r.label + ": " + r.text)+'"><span class="ch-label">'+escapeHtml(r.label)+'</span><span class="ch-track"><span class="ch-fill'+(r.tone?' ch-'+r.tone:'')+'" style="width:'+(r.value ? Math.max(2, w) : 0)+'%"></span></span><span class="ch-val">'+escapeHtml(r.text)+'</span></div>';
+  }).join("") + '</div>';
+}
+// Correct / wrong / not tried, one bar per group. rows: [{label, ok, bad, none}]
+function coverageBars(rows){
+  const legend = '<div class="ch-legend"><span><i class="ch-ok"></i>Correct</span><span><i class="ch-no"></i>Wrong</span><span><i class="ch-none"></i>Not tried</span></div>';
+  return legend + '<div class="ch-cov">' + rows.map(function(r){
+    const total = r.ok + r.bad + r.none || 1;
+    const seg = function(n, cls, word){ return n ? '<span class="'+cls+'" style="flex:'+n+'" title="'+escapeHtml(r.label+": "+n+" "+word)+'"></span>' : ''; };
+    return '<div class="ch-covrow"><div class="ch-covhead"><span>'+escapeHtml(r.label)+'</span><span class="ch-val">'+(r.ok+r.bad)+' of '+total+' tried · '+r.ok+' correct · '+r.bad+' wrong</span></div><div class="ch-stack">'+seg(r.ok,"ch-ok","correct")+seg(r.bad,"ch-no","wrong")+seg(r.none,"ch-none","not tried")+'</div></div>';
+  }).join("") + '</div>';
+}
+function activityCharts(a){
+  const days = a.daily || [];
+  const byAccuracy = (a.topics || []).filter(function(t){ return t.answers >= 3; }).slice().sort(function(x, y){ return x.accuracy - y.accuracy; }).slice(0, 12);
+  return chartCard("Questions answered per day", "Last 30 days, Saudi time.", colChart(days.map(function(d){ return { label: shortDay(d.date), value: d.answers, tip: shortDay(d.date)+": "+d.answers+" answered, "+d.correct+" correct" }; })), true) +
+    chartCard("Time of day", "All activity by hour, Saudi time.", colChart((a.hours || []).map(function(n, h){ return { label: h+":00", value: n, tip: h+":00 – "+n+" actions" }; }))) +
+    chartCard("Sections opened", "How often each section was opened.", barList((a.sections || []).slice(0, 12).map(function(x){ return { label: niceName(SECTION_NAMES, x.name), value: x.opens, text: String(x.opens) }; }))) +
+    chartCard("Accuracy by study mode", "", barList((a.modes || []).map(function(x){ return { label: niceName(MODE_NAMES, x.name), value: x.accuracy, max: 100, text: x.accuracy+"% of "+x.answers }; }), "No answers yet.")) +
+    chartCard("Main Exam score by domain", "Summed over finished exams.", barList((a.domains || []).map(function(x){ return { label: x.name, value: x.accuracy, max: 100, text: x.accuracy+"% of "+x.answers }; }), "No finished exams yet.")) +
+    chartCard("Weakest topics", "Lowest accuracy first (topics with at least 3 answers).", barList(byAccuracy.map(function(t){ return { label: t.name, value: t.accuracy, max: 100, text: t.accuracy+"% of "+t.answers, tone: t.accuracy < 60 ? "low" : "" }; }), "Not enough answers yet.")) +
+    chartCard("Devices", "People by the screen size they used.", barList((a.devices || []).map(function(x){ return { label: niceName({}, x.name), value: x.people, text: String(x.people) }; })));
 }
 
 function adminOverview(){
@@ -3252,26 +3381,28 @@ function adminOverview(){
         statTile("Answered while signed in", a.signed_in.toLocaleString(), a.signed_in ? a.signed_in_accuracy + "% correct" : "None yet") +
         statTile("Main Exams finished", r.mocks.completed, r.mocks.average === null ? "No results yet" : "Average score " + r.mocks.average + "%") +
       '</div>';
-    const weak = tableHtml([{label:"Topic"},{label:"Answers",num:1},{label:"Accuracy",num:1}],
-      r.weak_topics.map(function(t){ return '<tr><td>'+escapeHtml(t.topic)+'</td><td class="num">'+t.answers+'</td><td class="num">'+t.accuracy+'%</td></tr>'; }),
-      "Not enough answers yet (8 per topic).");
     const group = function(list){
       return tableHtml([{label:"Name"},{label:"Users",num:1},{label:"Answers",num:1},{label:"Accuracy",num:1}],
         list.map(function(g){ return '<tr><td>'+escapeHtml(g.name)+'</td><td class="num">'+g.users+'</td><td class="num">'+g.answers+'</td><td class="num">'+(g.answers?g.accuracy+'%':'—')+'</td></tr>'; }),
         "No users yet.");
     };
-    const signups = tableHtml([{label:"Date"},{label:"New users",num:1}],
-      r.signups_30d.slice().reverse().map(function(s){ return '<tr><td>'+fmtDay(s.date)+'</td><td class="num">'+s.users+'</td></tr>'; }),
-      "No sign-ups in the last 30 days.");
+    const signupMap = {}; r.signups_30d.forEach(function(s){ signupMap[s.date] = s.users; });
+    let charts = "";
+    if(r.analytics){
+      const first = r.funnel && r.funnel[0] ? r.funnel[0].people : 0;
+      charts = '<div class="ch-grid">' +
+        chartCard("From sign-in to Main Exam", "People who reached each step (admin not counted).", barList((r.funnel || []).map(function(f){ return { label: f.step, value: f.people, max: first || 1, text: f.people + (first ? " ("+Math.round(100*f.people/first)+"%)" : "") }; })), true) +
+        chartCard("People active per day", "Last 30 days.", colChart(r.analytics.daily.map(function(d){ return { label: shortDay(d.date), value: d.people, tip: shortDay(d.date)+": "+d.people+" active" }; }))) +
+        chartCard("New sign-ups per day", "Last 30 days.", colChart(r.analytics.daily.map(function(d){ return { label: shortDay(d.date), value: signupMap[d.date] || 0, tip: shortDay(d.date)+": "+(signupMap[d.date] || 0)+" new" }; }))) +
+        activityCharts(r.analytics) + '</div>';
+    }
     adminBody("overview",
-      tiles +
+      tiles + charts +
       '<div class="admin-grid">' +
-        '<div class="card card-pad"><h3 class="admin-h">Weakest topics</h3><p class="admin-note">All answers, topics with at least 8 answers.</p>'+weak+'</div>' +
-        '<div class="card card-pad"><h3 class="admin-h">Sign-ups, last 30 days</h3>'+signups+'</div>' +
         '<div class="card card-pad"><h3 class="admin-h">By organisation</h3>'+group(r.organisations)+'</div>' +
         '<div class="card card-pad"><h3 class="admin-h">By city</h3>'+group(r.cities)+'</div>' +
       '</div>' +
-      '<p class="admin-note">Updated '+fmtWhen(r.generated_at)+'. Answers from before sign-in was switched on count in the overall figures only.</p>');
+      '<p class="admin-note">Updated '+fmtWhen(r.generated_at)+'. Charts leave out the administrator\'s own activity. Activity is only recorded for people with usage statistics on.</p>');
   }).catch(function(e){ adminError("overview", e); });
 }
 
@@ -3280,39 +3411,106 @@ const USER_OPS = {
   reactivate: { label: "Reactivate", title: "Reactivate this user?", body: "They can sign in again straight away." },
   reset:      { label: "Reset progress", title: "Reset this user's progress?", body: "Their answers, bookmarks and exam history are cleared on each device the next time they open the trainer. This cannot be undone.", danger: true },
   "delete":   { label: "Delete", title: "Delete this user?", body: "They are signed out and can't sign in. You can restore the account for 30 days; after that it is erased and their usage history is unlinked from them.", danger: true },
-  restore:    { label: "Restore", title: "Restore this user?", body: "The account becomes active again." }
+  restore:    { label: "Restore", title: "Restore this user?", body: "The account becomes active again." },
+  erase:      { label: "Delete permanently", title: "Delete this user permanently?", body: "Their account and saved progress are erased now. Their past activity and question reports are kept without their name. This cannot be undone. They can sign up again later as a new user, and the sign-up rules for new users will apply.", danger: true }
 };
+function userOps(u){
+  if(u.role === "admin") return [];
+  return u.status === "active" ? ["suspend", "reset", "delete", "erase"] :
+         u.status === "suspended" ? ["reactivate", "delete", "erase"] : ["restore", "erase"];
+}
+function opButtons(u, ops){
+  return ops.map(function(op){
+    return '<button class="btn btn-sm '+(USER_OPS[op].danger?'btn-danger':'btn-ghost')+'" type="button" data-uop="'+op+'" data-uid="'+escapeHtml(u.user_id)+'">'+USER_OPS[op].label+'</button>';
+  }).join("");
+}
+function bindUserOps(el, lookup, after){
+  el.querySelectorAll("[data-uop]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const op = b.getAttribute("data-uop"), uid = b.getAttribute("data-uid");
+      const target = lookup(uid);
+      const def = USER_OPS[op];
+      let typed = "";
+      openModal({
+        title: def.title,
+        body: '<b>'+escapeHtml(target ? (target.name || target.email) : uid)+'</b>'+(target?' ('+escapeHtml(target.email)+')':'')+'<br><br>'+def.body +
+          (op === "erase" ? '<br><br><label for="erase-confirm">Type DELETE to confirm:</label><input class="pf-input" id="erase-confirm" type="text" autocomplete="off" dir="ltr">' : ''),
+        confirmLabel: def.label, danger: !!def.danger,
+        onConfirm: function(){
+          const extra = { target: uid, op: op };
+          if(op === "erase"){
+            if(typed.trim().toUpperCase() !== "DELETE"){ toast("Nothing was deleted: type DELETE to confirm."); return; }
+            extra.confirm = "DELETE";
+          }
+          api("admin_user_action", extra).then(function(){ toast(def.label + " done."); after(op, uid); })
+            .catch(function(e){ toast(e.message); });
+        }
+      });
+      const box = document.getElementById("erase-confirm");
+      if(box) box.addEventListener("input", function(){ typed = box.value; });
+    });
+  });
+}
 
+const USER_SORTS = {
+  joined_new: { label: "Newest joined", key: "created_at", dir: -1 },
+  joined_old: { label: "Oldest joined", key: "created_at", dir: 1 },
+  name_az:    { label: "Name A to Z", key: "name", dir: 1 },
+  name_za:    { label: "Name Z to A", key: "name", dir: -1 },
+  active:     { label: "Recently active", key: "active", dir: -1 },
+  answers:    { label: "Most answers", key: "answers", dir: -1 },
+  accuracy:   { label: "Highest accuracy", key: "accuracy", dir: -1 },
+  exam:       { label: "Exam date, soonest first", key: "exam_date", dir: 1 }
+};
+function sortUsers(list, id){
+  const s = USER_SORTS[id] || USER_SORTS.joined_new;
+  const val = function(u){
+    if(s.key === "name") return String(u.name || "").trim().toLowerCase();
+    if(s.key === "active") return u.last_active || u.last_login || "";
+    return u[s.key] === null || u[s.key] === undefined ? "" : u[s.key];
+  };
+  return list.slice().sort(function(a, b){
+    const x = val(a), y = val(b);
+    if(x === "" || y === "") return x === y ? String(a.email).localeCompare(b.email) : (x === "" ? 1 : -1);   // blanks always last
+    return s.dir * (typeof x === "number" ? x - y : String(x).localeCompare(String(y)));
+  });
+}
+
+let ADMIN_USER_ID = null;   // the user whose detail page is open
 function adminUsers(){
+  if(ADMIN_USER_ID){ adminUserDetail(ADMIN_USER_ID); return; }
   const draw = function(){
+    if(ADMIN_USER_ID) return;
     const q = ADMIN_FILTER.q.trim().toLowerCase();
-    const list = (ADMIN_USERS || []).filter(function(u){
+    const sort = ADMIN_FILTER.sort || "joined_new";
+    const list = sortUsers((ADMIN_USERS || []).filter(function(u){
       if(ADMIN_FILTER.status === "incomplete"){ if(!(u.status === "active" && u.role !== "admin" && !u.profile_done)) return false; }
       else if(ADMIN_FILTER.status !== "all" && u.status !== ADMIN_FILTER.status) return false;
       if(!q) return true;
       return [u.name, u.email, u.organisation, u.city].join(" ").toLowerCase().indexOf(q) !== -1;
-    });
+    }), sort);
     const rows = list.map(function(u){
-      const ops = u.role === "admin" ? [] :
-        u.status === "active" ? ["suspend", "reset", "delete"] :
-        u.status === "suspended" ? ["reactivate", "delete"] : ["restore"];
+      const ops = userOps(u).filter(function(o){ return o !== "reset" && o !== "delete"; });
       const statusPill = u.status === "active" ? '<span class="pill pill-good">Active</span>' :
         u.status === "suspended" ? '<span class="pill pill-bad">Suspended</span>' : '<span class="pill pill-muted">Deleted</span>';
       const incomplete = u.status === "active" && u.role !== "admin" && !u.profile_done;   // signed in with a code but never saved a profile
       return '<tr>' +
-        '<td><div>'+escapeHtml(u.name || "—")+(u.role==="admin"?' <span class="pill pill-gold">Admin</span>':'')+'</div><div class="sub">'+escapeHtml(u.email)+'</div></td>' +
+        '<td><button type="button" class="ch-name" data-view="'+escapeHtml(u.user_id)+'">'+escapeHtml(u.name || "—")+'</button>'+(u.role==="admin"?' <span class="pill pill-gold">Admin</span>':'')+'<div class="sub">'+escapeHtml(u.email)+'</div></td>' +
         '<td>'+escapeHtml(u.organisation || "—")+'<div class="sub">'+escapeHtml(u.city || "")+'</div></td>' +
+        '<td>'+fmtDay(u.created_at)+'</td>' +
         '<td>'+fmtDay(u.exam_date)+'</td>' +
         '<td>'+statusPill+(incomplete?'<div class="sub"><span class="pill pill-gold">Profile incomplete</span></div>':'')+(u.status==="deleted"&&u.deleted_at?'<div class="sub">'+fmtDay(u.deleted_at)+'</div>':'')+'</td>' +
         '<td>'+fmtWhen(u.last_active || u.last_login)+'</td>' +
         '<td class="num">'+u.answers+'</td>' +
         '<td class="num">'+(u.accuracy===null?'—':u.accuracy+'%')+'</td>' +
         '<td class="num">'+(u.best_mock===null?'—':u.best_mock+'%')+'</td>' +
-        '<td><div class="admin-actions">'+ops.map(function(op){
-          return '<button class="btn btn-sm '+(USER_OPS[op].danger?'btn-danger':'btn-ghost')+'" type="button" data-uop="'+op+'" data-uid="'+escapeHtml(u.user_id)+'">'+USER_OPS[op].label+'</button>';
-        }).join("")+'</div></td>' +
+        '<td><div class="admin-actions"><button class="btn btn-sm btn-primary" type="button" data-view="'+escapeHtml(u.user_id)+'">View</button>'+opButtons(u, ops)+'</div></td>' +
       '</tr>';
     });
+    const th = function(label, a, b){   // clickable column heading: switches between two sort orders
+      const on = sort === a || sort === b;
+      return '<button type="button" class="ch-th'+(on?' on':'')+'" data-sort="'+a+'" data-alt="'+(b||a)+'">'+label+'</button>' + (on ? ' <span aria-hidden="true">'+(USER_SORTS[sort].dir === 1 ? "↑" : "↓")+'</span>' : '');
+    };
     const el = adminBody("users",
       '<div class="admin-toolbar">' +
         '<input class="pf-input admin-search" id="admin-q" type="search" placeholder="Search name, email, organisation or city" aria-label="Search users" value="'+escapeHtml(ADMIN_FILTER.q)+'">' +
@@ -3320,36 +3518,136 @@ function adminUsers(){
           [["all","All statuses"],["active","Active"],["suspended","Suspended"],["deleted","Deleted"],["incomplete","Profile incomplete"]].map(function(o){
             return '<option value="'+o[0]+'"'+(ADMIN_FILTER.status===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join("") +
         '</select>' +
+        '<select class="pf-input admin-select" id="admin-sort" aria-label="Sort users">' +
+          Object.keys(USER_SORTS).map(function(k){ return '<option value="'+k+'"'+(sort===k?' selected':'')+'>'+USER_SORTS[k].label+'</option>'; }).join("") +
+        '</select>' +
         '<span class="admin-note">'+list.length+' of '+(ADMIN_USERS||[]).length+' users</span>' +
       '</div>' +
-      tableHtml([{label:"User"},{label:"Organisation"},{label:"Exam date"},{label:"Status"},{label:"Last active"},{label:"Answers",num:1},{label:"Accuracy",num:1},{label:"Best exam",num:1},{label:"Actions"}],
+      tableHtml([{label:th("User","name_az","name_za")},{label:"Organisation"},{label:th("Joined","joined_new","joined_old")},{label:th("Exam date","exam")},{label:"Status"},{label:th("Last active","active")},{label:th("Answers","answers"),num:1},{label:th("Accuracy","accuracy"),num:1},{label:"Best exam",num:1},{label:"Actions"}],
         rows, ADMIN_USERS && ADMIN_USERS.length ? "No users match." : "No one has signed in yet."));
     if(!el) return;
     const qi = document.getElementById("admin-q");
     qi.addEventListener("input", function(){ ADMIN_FILTER.q = qi.value; const pos = qi.selectionStart; draw(); const n = document.getElementById("admin-q"); if(n){ n.focus(); try{ n.setSelectionRange(pos, pos); }catch(x){} } });
     document.getElementById("admin-status").addEventListener("change", function(e){ ADMIN_FILTER.status = e.target.value; draw(); });
-    el.querySelectorAll("[data-uop]").forEach(function(b){
-      b.addEventListener("click", function(){
-        const op = b.getAttribute("data-uop"), uid = b.getAttribute("data-uid");
-        const target = (ADMIN_USERS || []).find(function(x){ return x.user_id === uid; });
-        const def = USER_OPS[op];
-        openModal({
-          title: def.title,
-          body: '<b>'+escapeHtml(target ? (target.name || target.email) : uid)+'</b>'+(target?' ('+escapeHtml(target.email)+')':'')+'<br><br>'+def.body,
-          confirmLabel: def.label, danger: !!def.danger,
-          onConfirm: function(){
-            api("admin_user_action", { target: uid, op: op }).then(function(){ toast(def.label + " done."); load(); })
-              .catch(function(e){ toast(e.message); });
-          }
-        });
-      });
+    document.getElementById("admin-sort").addEventListener("change", function(e){ ADMIN_FILTER.sort = e.target.value; draw(); });
+    el.querySelectorAll("[data-sort]").forEach(function(b){
+      b.addEventListener("click", function(){ const a = b.getAttribute("data-sort"), c = b.getAttribute("data-alt"); ADMIN_FILTER.sort = sort === a ? c : a; draw(); });
     });
+    el.querySelectorAll("[data-view]").forEach(function(b){
+      b.addEventListener("click", function(){ ADMIN_USER_ID = b.getAttribute("data-view"); adminBody("users", '<div class="empty">Loading…</div>'); adminUserDetail(ADMIN_USER_ID); window.scrollTo(0, 0); });
+    });
+    bindUserOps(el, function(uid){ return (ADMIN_USERS || []).find(function(x){ return x.user_id === uid; }); }, function(){ load(); });
   };
   const load = function(){
     api("admin_users").then(function(r){ ADMIN_USERS = r.users; draw(); }).catch(function(e){ adminError("users", e); });
   };
   if(ADMIN_USERS) draw();
   load();
+}
+
+// ---------- One user ----------
+function userCoverage(state){
+  const answers = (state && state.answers) || {};
+  const status = function(q){ const a = answers[q.id]; return !a ? "none" : (a.correct ? "ok" : "no"); };
+  const group = function(key){
+    const g = {}, order = [];
+    QUESTIONS.forEach(function(q){
+      const k = q[key] || "Other";
+      if(!g[k]){ g[k] = { label: k, ok: 0, bad: 0, none: 0 }; order.push(k); }
+      const s = status(q); g[k][s === "ok" ? "ok" : s === "no" ? "bad" : "none"]++;
+    });
+    return order.map(function(k){ return g[k]; });
+  };
+  const items = QUESTIONS.map(function(q){ return { q: q, s: status(q) }; });
+  return { items: items, domains: group("domain"), topics: group("category"),
+    ok: items.filter(function(i){ return i.s === "ok"; }).length, no: items.filter(function(i){ return i.s === "no"; }).length,
+    none: items.filter(function(i){ return i.s === "none"; }).length };
+}
+
+function adminUserDetail(uid){
+  Promise.resolve(api("admin_user_detail", { target: uid })).then(function(r){
+    return unpackProgress(r.progress).catch(function(){ return null; }).then(function(state){ drawUserDetail(uid, r, state); });
+  }).catch(function(e){
+    const el = adminBody("users", '<button class="btn btn-ghost btn-sm" type="button" id="ud-back">Back to all users</button><div class="empty">'+escapeHtml(e.message)+'</div>');
+    if(el) document.getElementById("ud-back").addEventListener("click", function(){ ADMIN_USER_ID = null; adminUsers(); });
+  });
+}
+
+function drawUserDetail(uid, r, state){
+  if(ADMIN_USER_ID !== uid) return;
+  const u = r.user, act = r.activity, cov = userCoverage(state), total = QUESTIONS.length;
+  const tried = cov.ok + cov.no;
+  const attempts = state ? Object.keys(state.answers || {}).reduce(function(n, k){ return n + ((state.answers[k].attempts || []).length || 1); }, 0) : 0;
+  const exams = ((state && state.mockAttempts) || []).slice().sort(function(a, b){ return String(b.dateFinished || b.dateStarted || "").localeCompare(String(a.dateFinished || a.dateStarted || "")); });
+  const marks = {};
+  Object.keys((state && state.bookmarks) || {}).forEach(function(k){ const b = state.bookmarks[k] || {}; Object.keys(b).forEach(function(f){ if(b[f]) marks[f] = (marks[f] || 0) + 1; }); });
+  const days = u.exam_date ? Math.ceil((Date.parse(u.exam_date) - Date.now()) / 864e5) : null;
+  const row = function(label, value){ return '<div class="acct-row"><span>'+label+'</span><b>'+value+'</b></div>'; };
+  const statusText = u.status === "active" ? (u.role !== "admin" && !u.profile_done ? "Active, profile incomplete" : "Active") : niceName({}, u.status);
+  const info = '<div class="card card-pad ch-card"><h3 class="admin-h">Account</h3>' +
+    row("Email", escapeHtml(u.email)) + row("Organisation", escapeHtml(u.organisation || "—")) + row("City", escapeHtml(u.city || "—")) +
+    row("Status", statusText) + row("Role", u.role === "admin" ? "Admin" : "User") + row("Joined", fmtWhen(u.created_at)) + row("Last sign-in", fmtWhen(u.last_login)) +
+    row("Last activity", fmtWhen(act.last_seen)) + row("Exam date", fmtDay(u.exam_date) + (days === null ? "" : (days >= 0 ? " (in "+days+" days)" : " (passed)"))) +
+    row("Progress last saved", fmtWhen(r.progress_saved_at)) + row("User ID", '<span dir="ltr">'+escapeHtml(u.user_id)+'</span>') + '</div>';
+  const study = '<div class="card card-pad ch-card"><h3 class="admin-h">Study progress</h3>' + (state ? (
+    row("Learn section", state.learnCompletedAt ? "Finished "+fmtDay(state.learnCompletedAt) : "Question "+Math.min((state.learnIndex || 0) + 1, total)+" of "+total) +
+    row("Study streak (days)", ((state.streak && state.streak.current) || 0)+" now, best "+((state.streak && state.streak.best) || 0)) +
+    row("Mistakes still open", Object.keys(state.answers || {}).filter(function(k){ return state.answers[k].correct === false && (state.mistakeStatus || {})[k] !== "learned"; }).length) +
+    row("Bookmarks", (marks.important || 0)+" important, "+(marks.reviewLater || 0)+" review later, "+(marks.difficult || 0)+" difficult") +
+    row("Certificate", state.certificate ? "Created "+fmtDay(state.certificate.issuedAt) : "Not yet")
+  ) : '<p class="admin-note">No saved progress yet. Progress is saved from 23 November 2026 onwards, the next time the person opens the trainer.</p>') + '</div>';
+  const tiles = '<div class="stat-grid">' +
+    statTile("Questions tried", tried+" / "+total, Math.round(100*tried/total)+"% of the question bank") +
+    statTile("Not tried yet", cov.none, "Questions never answered") +
+    statTile("Correct now", cov.ok, tried ? Math.round(100*cov.ok/tried)+"% of those tried" : "No answers yet") +
+    statTile("Wrong now", cov.no, "Latest answer was wrong") +
+    statTile("Answers given", attempts, "Including repeats") +
+    statTile("Main Exams taken", exams.length || act.mocks.length, exams.length ? "Best "+Math.max.apply(null, exams.map(function(m){ return m.pct || 0; }))+"%" : (act.mocks.length ? "Best "+Math.max.apply(null, act.mocks.map(function(m){ return m.pct; }))+"%" : "None yet")) +
+  '</div>';
+  const examList = exams.length ? exams.map(function(m){ return { at: m.dateFinished || m.dateStarted, exam: m.mode || m.id, pct: m.pct, detail: (m.correct != null ? m.correct+" of "+m.total : "") , minutes: m.timeTakenSec ? Math.round(m.timeTakenSec/60) : null }; })
+    : act.mocks.map(function(m){ return { at: m.at, exam: m.exam, pct: m.pct, detail: "", minutes: m.minutes }; });
+  const examTable = tableHtml([{label:"When"},{label:"Exam"},{label:"Score",num:1},{label:"Correct",num:1},{label:"Minutes",num:1}],
+    examList.map(function(m){ return '<tr><td>'+fmtWhen(m.at)+'</td><td>'+escapeHtml(String(m.exam || "—").replace(/^exam/i, "Main Exam "))+'</td><td class="num">'+(m.pct != null ? m.pct+"%" : "—")+'</td><td class="num">'+escapeHtml(m.detail || "—")+'</td><td class="num">'+(m.minutes == null ? "—" : m.minutes)+'</td></tr>'; }),
+    "No finished Main Exams yet.");
+  const reports = r.reports.length ? chartCard("Question reports from this person", "", tableHtml([{label:"When"},{label:"Question",num:1},{label:"Problem"},{label:"Comment"}],
+    r.reports.map(function(x){ return '<tr><td>'+fmtWhen(x.at)+'</td><td class="num">'+escapeHtml(String(x.question_id))+'</td><td>'+escapeHtml(x.issues.replace(/_/g, " "))+'</td><td>'+escapeHtml(x.comment || "—")+'</td></tr>'; })), true) : "";
+
+  const el = adminBody("users",
+    '<div class="admin-toolbar"><button class="btn btn-ghost btn-sm" type="button" id="ud-back">Back to all users</button></div>' +
+    '<div class="ud-head"><div><h2 class="ud-name">'+escapeHtml(u.name || u.email)+'</h2><div class="sub">'+escapeHtml(u.email)+'</div></div><div class="admin-actions">'+opButtons(u, userOps(u))+'</div></div>' +
+    '<div class="ch-grid">'+info+study+'</div>' + tiles +
+    '<div class="ch-grid">' +
+      chartCard("Coverage by domain", "Based on the latest answer to each question.", coverageBars(cov.domains), true) +
+      chartCard("Coverage by topic", "", coverageBars(cov.topics.slice().sort(function(a, b){ return (b.ok + b.bad) - (a.ok + a.bad); })), true) +
+      chartCard("Question by question", "Each square is one question. The option the person picked is not shown.",
+        '<div class="ud-filter"><select class="pf-input admin-select" id="ud-domain" aria-label="Domain"><option value="">All domains</option>'+cov.domains.map(function(d){ return '<option>'+escapeHtml(d.label)+'</option>'; }).join("")+'</select>' +
+        '<select class="pf-input admin-select" id="ud-status" aria-label="Show"><option value="no">Wrong</option><option value="none">Not tried</option><option value="ok">Correct</option></select></div><div id="ud-map"></div><div id="ud-list"></div>', true) +
+      chartCard("Main Exam results", "", examTable, true) +
+      reports +
+    '</div>' +
+    '<h3 class="admin-h">Activity</h3>' +
+    (act.events ? '<div class="ch-grid">'+activityCharts(act)+'</div>' : '<p class="admin-note">No usage activity is linked to this person.</p>') +
+    '<p class="admin-note">Your viewing of this page is recorded in the audit log.</p>');
+  if(!el) return;
+  document.getElementById("ud-back").addEventListener("click", function(){ ADMIN_USER_ID = null; adminUsers(); });
+  const drawMap = function(){
+    const dom = document.getElementById("ud-domain").value, st = document.getElementById("ud-status").value;
+    const inDom = cov.items.filter(function(i){ return !dom || i.q.domain === dom; });
+    const word = { ok: "correct", no: "wrong", none: "not tried" };
+    document.getElementById("ud-map").innerHTML = '<div class="ud-map" dir="ltr">' + inDom.map(function(i){
+      return '<i class="ch-'+i.s+'" title="'+escapeHtml("Question "+i.q.id+" ("+i.q.category+"): "+word[i.s])+'"></i>'; }).join("") + '</div>';
+    const list = inDom.filter(function(i){ return i.s === st; });
+    document.getElementById("ud-list").innerHTML = '<details class="ud-det"><summary>'+list.length+' questions: '+word[st]+'</summary><div class="ud-scroll">' +
+      tableHtml([{label:"No.",num:1},{label:"Topic"},{label:"Question"}], list.map(function(i){ return '<tr><td class="num">'+i.q.id+'</td><td>'+escapeHtml(i.q.category)+'</td><td dir="auto">'+escapeHtml(i.q.question)+'</td></tr>'; }), "None.") + '</div></details>';
+  };
+  document.getElementById("ud-domain").addEventListener("change", drawMap);
+  document.getElementById("ud-status").addEventListener("change", drawMap);
+  drawMap();
+  bindUserOps(el, function(){ return u; }, function(op){
+    ADMIN_USERS = null;
+    if(op === "erase"){ ADMIN_USER_ID = null; adminBody("users", '<div class="empty">Loading…</div>'); adminUsers(); }
+    else adminUserDetail(uid);
+  });
 }
 
 function adminAnnounce(){
@@ -3383,7 +3681,7 @@ function adminAnnounce(){
 
 const AUDIT_LABELS = {
   user_suspend: "Suspended user", user_reactivate: "Reactivated user", user_delete: "Deleted user", user_restore: "Restored user",
-  user_reset: "Reset progress", export_users: "Exported users", export_events: "Exported events", announce: "Published announcement",
+  user_erase: "Deleted user permanently", user_view: "Viewed user details", user_reset: "Reset progress", export_users: "Exported users", export_events: "Exported events", announce: "Published announcement",
   announce_clear: "Removed announcement", self_delete: "User deleted own account", purge_deleted: "Erased deleted account",
   purge_retention: "Erased account after retention period"
 };
