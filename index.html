@@ -790,6 +790,9 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "Answers": "الإجابات",
     "Accuracy": "الدقة",
     "Best exam": "أفضل اختبار",
+    "Emails": "الرسائل",
+    "Emails received": "الرسائل المستلمة",
+    "Subject": "الموضوع",
     "Actions": "الإجراءات",
     "View": "عرض",
     "Delete permanently": "حذف نهائي",
@@ -3478,6 +3481,33 @@ function sortUsers(list, id){
   });
 }
 
+// Emails sent to a user. "emails" is missing if the backend is older than this page.
+const EMAIL_STATES = { sent: "Sent", waiting: "Waiting", sending: "Not confirmed", failed: "Failed" };
+function emailSummary(emails){
+  if(!emails) return "—";
+  const g = {}, order = [];
+  let sent = 0;
+  emails.forEach(function(m){
+    const k = m.subject + "\n" + m.state;
+    if(!g[k]){ g[k] = { subject: m.subject.split(" | ")[0], state: m.state, n: 0 }; order.push(k); }
+    g[k].n++;
+    if(m.state === "sent") sent++;
+  });
+  return '<b>'+sent+'</b>' + order.map(function(k){
+    const x = g[k];
+    return '<div class="sub" dir="auto">'+escapeHtml(x.subject)+(x.n > 1 ? " × "+x.n : "")+(x.state === "sent" ? "" : " ("+(EMAIL_STATES[x.state] || escapeHtml(x.state))+")")+'</div>';
+  }).join("");
+}
+function emailCard(emails){
+  if(!emails) return "";
+  const sent = emails.filter(function(m){ return m.state === "sent"; }).length;
+  const list = emails.slice().sort(function(a, b){ return String(b.at).localeCompare(String(a.at)); });
+  return chartCard("Emails received", sent+" sent. Sign-in code emails are counted only from the day this count was added. The codes themselves are not saved.",
+    tableHtml([{label:"When"},{label:"Subject"},{label:"Status"}], list.map(function(m){
+      return '<tr><td>'+fmtWhen(m.at)+'</td><td dir="auto">'+escapeHtml(m.subject)+'</td><td>'+(EMAIL_STATES[m.state] || escapeHtml(m.state))+'</td></tr>';
+    }), "No emails recorded for this person."), true);
+}
+
 let ADMIN_USER_ID = null;   // the user whose detail page is open
 function adminUsers(){
   if(ADMIN_USER_ID){ adminUserDetail(ADMIN_USER_ID); return; }
@@ -3506,6 +3536,7 @@ function adminUsers(){
         '<td class="num">'+u.answers+'</td>' +
         '<td class="num">'+(u.accuracy===null?'—':u.accuracy+'%')+'</td>' +
         '<td class="num">'+(u.best_mock===null?'—':u.best_mock+'%')+'</td>' +
+        '<td>'+emailSummary(u.emails)+'</td>' +
         '<td><div class="admin-actions"><button class="btn btn-sm btn-primary" type="button" data-view="'+escapeHtml(u.user_id)+'">View</button>'+opButtons(u, ops)+'</div></td>' +
       '</tr>';
     });
@@ -3525,7 +3556,7 @@ function adminUsers(){
         '</select>' +
         '<span class="admin-note">'+list.length+' of '+(ADMIN_USERS||[]).length+' users</span>' +
       '</div>' +
-      tableHtml([{label:th("User","name_az","name_za")},{label:"Organisation"},{label:th("Joined","joined_new","joined_old")},{label:th("Exam date","exam")},{label:"Status"},{label:th("Last active","active")},{label:th("Answers","answers"),num:1},{label:th("Accuracy","accuracy"),num:1},{label:"Best exam",num:1},{label:"Actions"}],
+      tableHtml([{label:th("User","name_az","name_za")},{label:"Organisation"},{label:th("Joined","joined_new","joined_old")},{label:th("Exam date","exam")},{label:"Status"},{label:th("Last active","active")},{label:th("Answers","answers"),num:1},{label:th("Accuracy","accuracy"),num:1},{label:"Best exam",num:1},{label:"Emails"},{label:"Actions"}],
         rows, ADMIN_USERS && ADMIN_USERS.length ? "No users match." : "No one has signed in yet."));
     if(!el) return;
     const qi = document.getElementById("admin-q");
@@ -3619,6 +3650,7 @@ function drawUserDetail(uid, r, state){
     '<div class="ud-head"><div><h2 class="ud-name">'+escapeHtml(u.name || u.email)+'</h2><div class="sub">'+escapeHtml(u.email)+'</div></div><div class="admin-actions">'+opButtons(u, userOps(u))+'</div></div>' +
     '<div class="ch-grid">'+info+study+'</div>' + tiles +
     '<div class="ch-grid">' +
+      emailCard(r.emails) +
       chartCard("Coverage by domain", "Based on the latest answer to each question.", coverageBars(cov.domains), true) +
       chartCard("Coverage by topic", "", coverageBars(cov.topics.slice().sort(function(a, b){ return (b.ok + b.bad) - (a.ok + a.bad); })), true) +
       chartCard("Question by question", "Each square is one question. The option the person picked is not shown.",
