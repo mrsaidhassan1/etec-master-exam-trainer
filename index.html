@@ -827,6 +827,30 @@ window.AR_C = {"A trainer is conducting a hands-on workshop in a computer lab. T
     "New sign-ups per day": "المسجلون الجدد يوميًا",
     "By organisation": "حسب الجهة",
     "By city": "حسب المدينة",
+    "Name": "الاسم",
+    "Active": "نشط",
+    "Suspended": "موقوف",
+    "Deleted": "محذوف",
+    "Active, profile incomplete": "نشط، الملف غير مكتمل",
+    "Last sign-in": "آخر تسجيل دخول",
+    "Last activity": "آخر نشاط",
+    "Progress last saved": "آخر حفظ للتقدم",
+    "User ID": "معرّف المستخدم",
+    "Days until the exam": "الأيام المتبقية للاختبار",
+    "Passed": "انقضى",
+    "Edit details": "تعديل البيانات",
+    "Edit user details": "تعديل بيانات المستخدم",
+    "The email address cannot be changed, because the account is built on it.": "لا يمكن تغيير البريد الإلكتروني لأن الحساب قائم عليه.",
+    "Details saved.": "تم حفظ البيانات.",
+    "Nothing was changed.": "لم يتغير شيء.",
+    "The name cannot be left empty.": "لا يمكن ترك الاسم فارغًا.",
+    "Choose a full date, or leave all three date boxes empty.": "اختر تاريخًا كاملًا أو اترك خانات التاريخ الثلاث فارغة.",
+    "With this organisation the person can no longer use the trainer (it does not contain ARX or IATC). Press Save changes again to do it anyway.": "بهذه الجهة لن يتمكن المستخدم من استخدام المدرّب (لأنها لا تتضمن ARX أو IATC). اضغط حفظ التغييرات مرة أخرى للمتابعة.",
+    "Suspend": "إيقاف",
+    "Reactivate": "إعادة التفعيل",
+    "Reset progress": "إعادة ضبط التقدم",
+    "Delete": "حذف",
+    "Restore": "استعادة",
     "Cancel": "إلغاء",
     "Confirm": "تأكيد",
 
@@ -3578,6 +3602,45 @@ function adminUsers(){
   load();
 }
 
+// ---------- Admin: edit a user's details ----------
+function openUserEdit(u, done){
+  const root = document.getElementById("modal-root");
+  const field = function(id, label, value, max){
+    return '<div class="pf-field"><label for="'+id+'">'+label+'</label><input class="pf-input" id="'+id+'" type="text" dir="auto" maxlength="'+max+'" value="'+escapeHtml(value || "")+'"></div>';
+  };
+  root.innerHTML =
+    '<div class="modal-overlay" id="modal-overlay"><div class="modal report-modal" role="dialog" aria-modal="true">' +
+      '<h3>Edit user details</h3><p class="report-q" dir="ltr">'+escapeHtml(u.email)+'</p>' +
+      field("ue-name", "Name", u.name, 60) + field("ue-org", "Organisation", u.organisation, 80) + field("ue-city", "City", u.city, 60) +
+      '<div class="pf-field"><label>Exam date</label>' + examDateSelectsHtml(u.exam_date) + '</div>' +
+      '<p class="report-q">The email address cannot be changed, because the account is built on it.</p>' +
+      '<div class="report-msg" id="ue-msg" role="alert"></div>' +
+      '<div class="modal-actions"><button class="btn btn-ghost" id="ue-cancel" type="button">Cancel</button>' +
+      '<button class="btn btn-primary" id="ue-save" type="button">Save changes</button></div>' +
+    '</div></div>';
+  const msg = function(t){ document.getElementById("ue-msg").textContent = t; };
+  document.getElementById("ue-cancel").addEventListener("click", closeModal);
+  let force = false;
+  const save = document.getElementById("ue-save");
+  save.addEventListener("click", function(){
+    const exam = readExamDate();
+    if(exam === null){ msg("Choose a full date, or leave all three date boxes empty."); return; }
+    const data = { target: u.user_id, name: document.getElementById("ue-name").value, organisation: document.getElementById("ue-org").value,
+      city: document.getElementById("ue-city").value, exam_date: exam, force: force };
+    save.disabled = true; msg("Saving…");
+    api("admin_user_edit", data).then(function(r){
+      closeModal(); toast(r.changed && r.changed.length ? "Details saved." : "Nothing was changed."); done();
+    }).catch(function(e){
+      save.disabled = false;
+      if(e.code === "would_lock_out"){
+        force = true;
+        msg("With this organisation the person can no longer use the trainer (it does not contain ARX or IATC). Press Save changes again to do it anyway.");
+      } else msg(e.code === "name_required" ? "The name cannot be left empty." : e.message);
+    });
+  });
+  ["ue-org"].forEach(function(id){ document.getElementById(id).addEventListener("input", function(){ force = false; }); });
+}
+
 // ---------- One user ----------
 function userCoverage(state){
   const answers = (state && state.answers) || {};
@@ -3620,7 +3683,7 @@ function drawUserDetail(uid, r, state){
   const info = '<div class="card card-pad ch-card"><h3 class="admin-h">Account</h3>' +
     row("Email", escapeHtml(u.email)) + row("Organisation", escapeHtml(u.organisation || "—")) + row("City", escapeHtml(u.city || "—")) +
     row("Status", statusText) + row("Role", u.role === "admin" ? "Admin" : "User") + row("Joined", fmtWhen(u.created_at)) + row("Last sign-in", fmtWhen(u.last_login)) +
-    row("Last activity", fmtWhen(act.last_seen)) + row("Exam date", fmtDay(u.exam_date) + (days === null ? "" : (days >= 0 ? " (in "+days+" days)" : " (passed)"))) +
+    row("Last activity", fmtWhen(act.last_seen)) + row("Exam date", fmtDay(u.exam_date)) + (days === null ? "" : row("Days until the exam", days >= 0 ? days : "Passed")) +
     row("Progress last saved", fmtWhen(r.progress_saved_at)) + row("User ID", '<span dir="ltr">'+escapeHtml(u.user_id)+'</span>') + '</div>';
   const study = '<div class="card card-pad ch-card"><h3 class="admin-h">Study progress</h3>' + (state ? (
     row("Learn section", state.learnCompletedAt ? "Finished "+fmtDay(state.learnCompletedAt) : "Question "+Math.min((state.learnIndex || 0) + 1, total)+" of "+total) +
@@ -3647,7 +3710,7 @@ function drawUserDetail(uid, r, state){
 
   const el = adminBody("users",
     '<div class="admin-toolbar"><button class="btn btn-ghost btn-sm" type="button" id="ud-back">Back to all users</button></div>' +
-    '<div class="ud-head"><div><h2 class="ud-name">'+escapeHtml(u.name || u.email)+'</h2><div class="sub">'+escapeHtml(u.email)+'</div></div><div class="admin-actions">'+opButtons(u, userOps(u))+'</div></div>' +
+    '<div class="ud-head"><div><h2 class="ud-name">'+escapeHtml(u.name || u.email)+'</h2><div class="sub">'+escapeHtml(u.email)+'</div></div><div class="admin-actions">'+(u.role === "admin" ? '' : '<button class="btn btn-sm btn-primary" type="button" id="ud-edit">Edit details</button>')+opButtons(u, userOps(u))+'</div></div>' +
     '<div class="ch-grid">'+info+study+'</div>' + tiles +
     '<div class="ch-grid">' +
       emailCard(r.emails) +
@@ -3664,6 +3727,8 @@ function drawUserDetail(uid, r, state){
     '<p class="admin-note">Your viewing of this page is recorded in the audit log.</p>');
   if(!el) return;
   document.getElementById("ud-back").addEventListener("click", function(){ ADMIN_USER_ID = null; adminUsers(); });
+  const editBtn = document.getElementById("ud-edit");
+  if(editBtn) editBtn.addEventListener("click", function(){ openUserEdit(u, function(){ ADMIN_USERS = null; adminUserDetail(uid); }); });
   const drawMap = function(){
     const dom = document.getElementById("ud-domain").value, st = document.getElementById("ud-status").value;
     const inDom = cov.items.filter(function(i){ return !dom || i.q.domain === dom; });
@@ -3715,7 +3780,7 @@ function adminAnnounce(){
 
 const AUDIT_LABELS = {
   user_suspend: "Suspended user", user_reactivate: "Reactivated user", user_delete: "Deleted user", user_restore: "Restored user",
-  user_erase: "Deleted user permanently", user_view: "Viewed user details", user_reset: "Reset progress", export_users: "Exported users", export_events: "Exported events", announce: "Published announcement",
+  user_edit: "Edited user details", user_erase: "Deleted user permanently", user_view: "Viewed user details", user_reset: "Reset progress", export_users: "Exported users", export_events: "Exported events", announce: "Published announcement",
   announce_clear: "Removed announcement", self_delete: "User deleted own account", purge_deleted: "Erased deleted account",
   purge_retention: "Erased account after retention period"
 };
